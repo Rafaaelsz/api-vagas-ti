@@ -10,12 +10,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jobs_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build: .
     restart: unless-stopped
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 3333
@@ -36,3 +42,4 @@ services:
 
 volumes:
   postgres_data:
+    name: jobs_api_postgres_data
