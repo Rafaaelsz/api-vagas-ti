@@ -1,10 +1,10 @@
 # Vagas TI Frontend
 
-Interface pública para busca, filtro e exploração de vagas de tecnologia consumindo a API REST do projeto API de Vagas de TI.
+Interface publica para busca, filtro e exploracao de vagas de tecnologia consumindo a API REST do projeto.
 
 ## Objetivo
 
-Criar uma experiência pública, sem autenticação, para que qualquer pessoa encontre vagas de tecnologia por cargo, empresa, tecnologia, modalidade, contrato, senioridade, localização e faixa salarial.
+Criar uma experiencia publica, sem autenticacao, para que qualquer pessoa encontre vagas de tecnologia por cargo, empresa, tecnologia, modalidade, contrato, senioridade, localizacao e faixa salarial.
 
 ## Stack
 
@@ -12,19 +12,15 @@ Criar uma experiência pública, sem autenticação, para que qualquer pessoa en
 - React e TypeScript
 - Tailwind CSS
 - Componentes locais inspirados em shadcn/ui
-- Lucide React para ícones
-- Recharts para gráficos
+- Lucide React
+- Recharts
 - Fetch API centralizada
 
-## Configuração
-
-Copie o arquivo de ambiente:
+## Configuracao
 
 ```bash
 cp .env.example .env.local
 ```
-
-Configure a URL da API:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3333
@@ -47,17 +43,17 @@ http://localhost:3000
 
 ## Rotas
 
-- `/`: landing page pública com busca, métricas e vagas recentes
-- `/vagas`: listagem com busca, filtros e paginação
+- `/`: landing page publica com busca, metricas e vagas recentes
+- `/vagas`: listagem com busca, filtros e paginacao
 - `/vagas/[id]`: detalhes da vaga
 - `/empresas`: listagem e busca de empresas
 - `/empresas/[id]`: detalhes da empresa e vagas vinculadas
-- `/estatisticas`: gráficos e métricas públicas
-- `/sobre`: explicação do projeto
+- `/estatisticas`: graficos e metricas publicas
+- `/sobre`: explicacao do projeto
 
-## Integração com a API
+## Integracao Com A API
 
-Serviços criados:
+Servicos criados:
 
 - `src/services/jobs-service.ts`
 - `src/services/companies-service.ts`
@@ -71,26 +67,17 @@ Endpoints integrados:
 - `GET /companies`
 - `GET /companies/:id`
 - `GET /technologies`
+- `GET /stats`
 - `GET /dashboard/summary`
 
-Como o backend atual protege `/dashboard/summary`, a página `/estatisticas` tenta esse endpoint e, quando recebe `401`, `403` ou `404`, calcula estatísticas públicas a partir de `/jobs`, `/companies` e `/technologies`.
+A pagina `/estatisticas` consome estatisticas publicas da API. Caso algum endpoint de resumo esteja indisponivel em outro ambiente, o frontend mantem fallback calculado a partir de endpoints publicos.
 
 ## Estrutura
 
 ```txt
 src/
   app/
-    vagas/
-    empresas/
-    estatisticas/
-    sobre/
   components/
-    companies/
-    jobs/
-    layout/
-    shared/
-    stats/
-    ui/
   lib/
   services/
   types/
@@ -99,16 +86,16 @@ src/
 ## Funcionalidades
 
 - Busca textual de vagas
-- Filtros por tecnologia, modalidade, contrato, senioridade, localização e salário
-- Ordenação por data, salário ou título
-- Paginação
+- Filtros por tecnologia, modalidade, contrato, senioridade, localizacao e salario
+- Ordenacao por data, salario ou titulo
+- Paginacao
 - Cards responsivos de vagas e empresas
-- Página de detalhes
+- Pagina de detalhes
 - Estados de loading, erro e vazio
 - Tema claro/escuro
-- Gráficos responsivos com Recharts
+- Graficos responsivos com Recharts
 
-## Validação
+## Validacao
 
 ```bash
 npm run lint
@@ -117,7 +104,7 @@ npm run build
 
 ## Melhorias Futuras
 
-- Endpoint público dedicado para estatísticas
+- Mais fontes reais de ingestao autorizada
 - Campo `applicationUrl` nas vagas
 - Busca por empresa diretamente no endpoint `/jobs`
 - Favoritos salvos localmente
