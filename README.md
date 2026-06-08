@@ -1,158 +1,117 @@
-# API de Vagas de TI
+# API Pública de Vagas de TI
 
-API REST para cadastro, busca, filtro e gerenciamento de vagas de tecnologia. O projeto foi estruturado como backend de portfólio, com autenticação, autorização por papéis, validação, PostgreSQL, Prisma, Docker, Swagger e testes básicos.
+API REST pública para busca, filtro e exploração de vagas de tecnologia. A V1 foi simplificada para ser consumida por um frontend público, sem login, Bearer Token, usuários, candidaturas internas ou área administrativa.
+
+## Objetivo da V1
+
+- Listar vagas de TI publicadas.
+- Buscar e filtrar vagas por tecnologia, modalidade, contrato, senioridade, localização e salário.
+- Exibir detalhes de vagas com empresa, tecnologias e link externo de candidatura.
+- Listar empresas e tecnologias.
+- Exibir estatísticas públicas.
+- Rodar localmente com PostgreSQL e Docker.
+- Documentar endpoints públicos via Swagger.
 
 ## Stack
 
-- Node.js, TypeScript e Fastify
-- PostgreSQL e Prisma ORM
-- Zod para validação
-- JWT e bcryptjs para autenticação
-- Swagger/OpenAPI em `/docs`
-- Docker Compose com API, PostgreSQL e Adminer
-- Vitest para testes de fluxo
+- Node.js
+- TypeScript
+- Fastify
+- PostgreSQL
+- Prisma ORM
+- Zod
+- Swagger/OpenAPI
+- Docker e Docker Compose
 - ESLint e Prettier
+- Vitest
 
-## Funcionalidades
+## O Que Foi Simplificado
 
-- Cadastro, login, perfil e exclusão de usuário
-- Empresas vinculadas a recrutadores
-- CRUD de vagas com publicação e encerramento
-- Busca e filtros de vagas por texto, tecnologia, modalidade, contrato, senioridade, localização e salário
-- Paginação com metadados
-- Cadastro e manutenção de tecnologias
-- Candidatura em vagas publicadas
-- Bloqueio de candidatura duplicada
-- Dashboard administrativo com métricas agregadas
-- Tratamento padronizado de erros
+A V1 removeu da API pública:
 
-## Como Rodar Localmente
+- autenticação;
+- login, registro e logout;
+- Bearer Token/JWT;
+- usuários, roles e permissões;
+- candidaturas internas;
+- rotas administrativas de escrita;
+- painel privado.
 
-1. Instale as dependências:
+Esses recursos podem voltar em versões futuras, mas não fazem parte da API pública inicial.
 
-```bash
-npm install
-```
+## Entidades
 
-2. Copie as variáveis de ambiente:
+### Company
 
-```bash
-cp .env.example .env
-```
+- `id`
+- `name`
+- `description`
+- `website`
+- `location`
+- `createdAt`
+- `updatedAt`
 
-3. Suba um PostgreSQL local ou use o serviço do Compose:
+### Job
 
-```bash
-docker compose up -d postgres
-```
+- `id`
+- `title`
+- `description`
+- `companyId`
+- `location`
+- `workMode`
+- `contractType`
+- `seniorityLevel`
+- `salaryMin`
+- `salaryMax`
+- `currency`
+- `externalUrl`
+- `source`
+- `status`
+- `publishedAt`
+- `expiresAt`
+- `createdAt`
+- `updatedAt`
 
-4. Rode migrations, gere o client e alimente o banco:
+### Technology
 
-```bash
-npm run prisma:migrate
-npm run seed
-```
+- `id`
+- `name`
+- `createdAt`
+- `updatedAt`
 
-5. Inicie a API:
+### JobTechnology
 
-```bash
-npm run dev
-```
+- `jobId`
+- `technologyId`
 
-A API roda em `http://localhost:3333`.
+## Rotas Públicas
 
-## Docker
-
-```bash
-docker compose up --build
-```
-
-Serviços:
-
-- API: `http://localhost:3333`
-- Swagger: `http://localhost:3333/docs`
-- Adminer: `http://localhost:8080`
-- PostgreSQL: `localhost:5432`
-
-## Variáveis de Ambiente
-
-Veja [.env.example](./.env.example).
-
-Principais variáveis:
-
-- `DATABASE_URL`: conexão PostgreSQL usada pelo Prisma
-- `JWT_SECRET`: segredo para assinar tokens JWT
-- `JWT_EXPIRES_IN`: expiração do token
-- `CORS_ORIGIN`: origem permitida para frontend
-
-## Scripts
-
-```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run format
-npm run test
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:studio
-npm run seed
-```
-
-## Rotas Principais
-
-### Auth
-
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/me`
-- `POST /auth/logout`
-
-### Users
-
-- `GET /users/me`
-- `PUT /users/me`
-- `DELETE /users/me`
-
-### Companies
-
-- `GET /companies`
-- `GET /companies/:id`
-- `POST /companies`
-- `PUT /companies/:id`
-- `DELETE /companies/:id`
-
-### Jobs
-
+- `GET /health`
 - `GET /jobs`
 - `GET /jobs/:id`
-- `POST /jobs`
-- `PUT /jobs/:id`
-- `DELETE /jobs/:id`
-- `PATCH /jobs/:id/publish`
-- `PATCH /jobs/:id/close`
-- `POST /jobs/:jobId/apply`
-
-### Technologies
-
+- `GET /companies`
+- `GET /companies/:id`
 - `GET /technologies`
-- `POST /technologies`
-- `PUT /technologies/:id`
-- `DELETE /technologies/:id`
-
-### Applications
-
-- `GET /applications`
-- `GET /applications/:id`
-- `PATCH /applications/:id/status`
-- `DELETE /applications/:id`
-
-### Dashboard
-
-- `GET /dashboard/summary`
+- `GET /stats`
+- `GET /dashboard/summary` como alias de compatibilidade para o frontend
 
 ## Filtros de Vagas
+
+`GET /jobs` aceita:
+
+- `search`
+- `technology`
+- `workMode`
+- `contractType`
+- `seniorityLevel`
+- `location`
+- `salaryMin`
+- `salaryMax`
+- `page`
+- `limit`
+- `sort`
+
+Exemplos:
 
 ```txt
 GET /jobs?search=node
@@ -162,7 +121,9 @@ GET /jobs?contractType=PJ
 GET /jobs?seniorityLevel=JUNIOR
 GET /jobs?location=São Paulo
 GET /jobs?salaryMin=3000&salaryMax=8000
-GET /jobs?page=1&limit=10&sortBy=createdAt&order=desc
+GET /jobs?page=1&limit=10
+GET /jobs?sort=recent
+GET /jobs?sort=salary_desc
 ```
 
 Resposta paginada:
@@ -179,104 +140,154 @@ Resposta paginada:
 }
 ```
 
-## Exemplos de Payload
+## Estatísticas
 
-Registro:
+`GET /stats` retorna:
 
-```json
-{
-  "name": "Ana Silva",
-  "email": "ana@example.com",
-  "password": "Password123",
-  "role": "CANDIDATE"
-}
+- total de vagas publicadas;
+- total de empresas;
+- total de tecnologias;
+- vagas por modalidade;
+- vagas por senioridade;
+- vagas por tipo de contrato;
+- tecnologias mais pedidas;
+- localizações com mais vagas;
+- vagas recentes.
+
+## Variáveis de Ambiente
+
+Veja [.env.example](./.env.example).
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jobs_api?schema=public
+PORT=3333
+HOST=0.0.0.0
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
 ```
 
-Criação de vaga:
+## Como Rodar Com Docker
 
-```json
-{
-  "title": "Backend Developer Node.js",
-  "description": "Desenvolvimento de APIs REST com Node.js, TypeScript e PostgreSQL.",
-  "companyId": "company_id",
-  "location": "Remoto",
-  "workMode": "REMOTE",
-  "contractType": "PJ",
-  "seniorityLevel": "SENIOR",
-  "salaryMin": 9000,
-  "salaryMax": 14000,
-  "technologyNames": ["Node.js", "TypeScript", "Prisma"]
-}
+```bash
+docker compose up --build
 ```
 
-Candidatura:
+Comandos úteis:
 
-```json
-{
-  "coverLetter": "Tenho experiência com APIs Node.js e interesse na vaga."
-}
+```bash
+docker compose down
+docker compose logs -f api
+docker compose exec api npx prisma migrate dev
+docker compose exec api npx prisma db seed
+docker compose exec api npx prisma studio
 ```
 
-## Estrutura
+Serviços:
+
+- API: `http://localhost:3333`
+- Swagger: `http://localhost:3333/docs`
+- Adminer: `http://localhost:8080`
+- PostgreSQL: `localhost:5432`
+
+## Como Rodar Sem Docker
+
+1. Instale dependências:
+
+```bash
+npm install
+```
+
+2. Configure `.env`:
+
+```bash
+cp .env.example .env
+```
+
+3. Rode migrations:
+
+```bash
+npm run prisma:migrate
+```
+
+4. Rode seed:
+
+```bash
+npm run prisma:seed
+```
+
+5. Inicie a API:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run format
+npm run test
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+npm run prisma:studio
+```
+
+## Swagger
+
+A documentação pública está em:
 
 ```txt
-src/
-  modules/
-    applications/
-    auth/
-    companies/
-    dashboard/
-    jobs/
-    technologies/
-    users/
-  shared/
-    config/
-    database/
-    errors/
-    middlewares/
-    utils/
-  app.ts
-  server.ts
-prisma/
-  migrations/
-  schema.prisma
-  seed.ts
-tests/
+http://localhost:3333/docs
 ```
 
-## Decisões Técnicas
+## Frontend Público
 
-- Fastify foi escolhido por performance, plugins maduros e boa ergonomia para APIs REST.
-- Prisma centraliza modelagem, relacionamentos e migrations PostgreSQL.
-- Zod valida body, params e query antes das regras de negócio.
-- JWT carrega `id`, `email` e `role`; dados sensíveis como `passwordHash` nunca são retornados.
-- Services concentram regras de negócio; controllers apenas validam entrada e formatam resposta.
-- Dashboard é restrito a `ADMIN` por expor dados agregados administrativos.
+O frontend público foi criado em `frontend/` com Next.js, TypeScript, Tailwind CSS, Lucide React e Recharts.
+
+Para rodar:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Configure:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3333
+```
 
 ## Testes
 
-Os testes usam `app.inject` do Fastify e esperam um banco PostgreSQL de teste configurado em `DATABASE_URL`.
+Os testes cobrem os fluxos públicos principais:
+
+- health check;
+- listagem de vagas;
+- filtros de vagas;
+- paginação;
+- detalhes da vaga;
+- listagem de empresas;
+- listagem de tecnologias;
+- stats.
 
 ```bash
 npm run test
 ```
 
-Fluxos cobertos:
-
-- registro de usuário
-- login
-- criação de empresa
-- criação de vaga
-- listagem e filtro de vagas
-- candidatura em vaga publicada
-- bloqueio de candidatura duplicada
-- bloqueio de rota privada sem token
-
 ## Melhorias Futuras
 
-- Refresh tokens e blacklist para logout stateful
-- Observabilidade com logs estruturados e tracing
-- CI com lint, build, tests e migrations
-- Testcontainers para banco isolado nos testes
-- Busca full-text PostgreSQL
-- Upload de currículo e integração com frontend Next.js
+- Autenticação.
+- Painel administrativo.
+- Cadastro de vagas por recrutadores.
+- Favoritos.
+- Candidaturas.
+- Scraping ou integração com fontes externas.
+- Notificações.
+- Cache com Redis.
+- Endpoint público de busca full-text com ranking de relevância.

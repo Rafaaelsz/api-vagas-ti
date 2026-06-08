@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS "Application";
+
+ALTER TABLE "Company" DROP CONSTRAINT IF EXISTS "Company_userId_fkey";
+DROP INDEX IF EXISTS "Company_userId_idx";
+ALTER TABLE "Company" DROP COLUMN IF EXISTS "userId";
+CREATE INDEX IF NOT EXISTS "Company_location_idx" ON "Company"("location");
+
+ALTER TABLE "Job" DROP COLUMN IF EXISTS "applications";
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "externalUrl" TEXT;
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "source" TEXT;
+ALTER TABLE "Job" ALTER COLUMN "status" SET DEFAULT 'PUBLISHED';
+UPDATE "Job" SET "status" = 'PUBLISHED' WHERE "status" = 'DRAFT';
+
+DROP TABLE IF EXISTS "User";
+DROP TYPE IF EXISTS "UserRole";
+DROP TYPE IF EXISTS "ApplicationStatus";
