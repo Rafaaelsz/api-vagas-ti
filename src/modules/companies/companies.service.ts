@@ -1,71 +1,67 @@
-import { UserRole } from '@prisma/client';
+import { JobStatus, Prisma } from '@prisma/client';
 import type { z } from 'zod';
 import { prisma } from '../../shared/database/prisma';
 import { HttpError } from '../../shared/errors/http-error';
-import type { createCompanySchema, updateCompanySchema } from './companies.schemas';
+import type { listCompaniesQuerySchema } from './companies.schemas';
 
-type CreateCompanyInput = z.infer<typeof createCompanySchema>;
-type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
+type ListCompaniesQuery = z.infer<typeof listCompaniesQuerySchema>;
 
-export function listCompanies() {
+const companyInclude = {
+  _count: {
+    select: {
+      jobs: {
+        where: {
+          status: JobStatus.PUBLISHED,
+        },
+      },
+    },
+  },
+  jobs: {
+    where: {
+      status: JobStatus.PUBLISHED,
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      createdAt: true,
+      publishedAt: true,
+      location: true,
+      workMode: true,
+      contractType: true,
+      seniorityLevel: true,
+    },
+    orderBy: {
+      publishedAt: 'desc',
+    },
+  },
+} satisfies Prisma.CompanyInclude;
+
+export function listCompanies(query: ListCompaniesQuery) {
   return prisma.company.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { user: { select: { id: true, name: true, email: true, role: true } } },
+    where: query.search
+      ? {
+          OR: [
+            { name: { contains: query.search, mode: 'insensitive' } },
+            { description: { contains: query.search, mode: 'insensitive' } },
+            { location: { contains: query.search, mode: 'insensitive' } },
+          ],
+        }
+      : undefined,
+    orderBy: { name: 'asc' },
+    include: companyInclude,
   });
 }
 
 export async function getCompany(id: string) {
   const company = await prisma.company.findUnique({
     where: { id },
-    include: {
-      user: { select: { id: true, name: true, email: true, role: true } },
-      jobs: { select: { id: true, title: true, status: true, createdAt: true } },
-    },
+    include: companyInclude,
   });
 
   if (!company) {
-    throw new HttpError('Empresa não encontrada.', 404);
+    throw new HttpError('Empresa não encontrada.', 404, 'COMPANY_NOT_FOUND');
   }
 
   return company;
-}
-
-export function createCompany(userId: string, input: CreateCompanyInput) {
-  return prisma.company.create({
-    data: {
-      ...input,
-      userId,
-    },
-  });
-}
-
-export async function updateCompany(id: string, userId: string, role: UserRole, input: UpdateCompanyInput) {
-  const company = await prisma.company.findUnique({ where: { id } });
-
-  if (!company) {
-    throw new HttpError('Empresa não encontrada.', 404);
-  }
-
-  if (company.userId !== userId && role !== UserRole.ADMIN) {
-    throw new HttpError('Somente o dono da empresa pode editá-la.', 403);
-  }
-
-  return prisma.company.update({
-    where: { id },
-    data: input,
-  });
-}
-
-export async function deleteCompany(id: string, userId: string, role: UserRole) {
-  const company = await prisma.company.findUnique({ where: { id } });
-
-  if (!company) {
-    throw new HttpError('Empresa não encontrada.', 404);
-  }
-
-  if (company.userId !== userId && role !== UserRole.ADMIN) {
-    throw new HttpError('Somente o dono da empresa pode excluí-la.', 403);
-  }
-
-  await prisma.company.delete({ where: { id } });
 }

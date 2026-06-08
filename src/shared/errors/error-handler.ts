@@ -6,24 +6,31 @@ import { HttpError } from './http-error';
 export function errorHandler(error: FastifyError, _request: FastifyRequest, reply: FastifyReply) {
   if (error instanceof ZodError) {
     return reply.status(400).send({
-      error: 'ValidationError',
-      message: 'Dados inválidos.',
-      details: error.flatten(),
+      error: {
+        message: 'Parâmetros inválidos.',
+        code: 'VALIDATION_ERROR',
+        details: error.flatten(),
+      },
     });
   }
 
   if (error instanceof HttpError) {
     return reply.status(error.statusCode).send({
-      error: 'HttpError',
-      message: error.message,
+      error: {
+        message: error.message,
+        code: error.code,
+      },
     });
   }
 
   const statusCode = error.statusCode ?? 500;
+  const isServerError = statusCode >= 500;
 
   return reply.status(statusCode).send({
-    error: statusCode >= 500 ? 'InternalServerError' : 'RequestError',
-    message: statusCode >= 500 ? 'Erro interno do servidor.' : error.message,
-    ...(env.NODE_ENV !== 'production' && statusCode >= 500 ? { stack: error.stack } : {}),
+    error: {
+      message: isServerError ? 'Erro interno do servidor.' : error.message,
+      code: isServerError ? 'INTERNAL_SERVER_ERROR' : 'REQUEST_ERROR',
+      ...(env.NODE_ENV !== 'production' && isServerError ? { stack: error.stack } : {}),
+    },
   });
 }

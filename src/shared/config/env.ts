@@ -6,9 +6,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
-  JWT_SECRET: z.string().min(16),
-  JWT_EXPIRES_IN: z.string().default('7d'),
-  CORS_ORIGIN: z.string().default('*'),
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
 });
 
 export const env = envSchema.parse(process.env);

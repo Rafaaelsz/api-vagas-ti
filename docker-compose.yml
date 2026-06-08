@@ -1,12 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: api-vagas-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: api_vagas
+      POSTGRES_DB: jobs_api
     ports:
       - "5432:5432"
     volumes:
@@ -14,7 +13,6 @@ services:
 
   api:
     build: .
-    container_name: api-vagas-api
     restart: unless-stopped
     depends_on:
       - postgres
@@ -22,17 +20,14 @@ services:
       NODE_ENV: production
       PORT: 3333
       HOST: 0.0.0.0
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/api_vagas?schema=public
-      JWT_SECRET: change-me-in-production
-      JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jobs_api?schema=public
+      FRONTEND_URL: http://localhost:3000
     ports:
       - "3333:3333"
     command: sh -c "npx prisma migrate deploy && node dist/src/server.js"
 
   adminer:
     image: adminer:4
-    container_name: api-vagas-adminer
     restart: unless-stopped
     depends_on:
       - postgres
