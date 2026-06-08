@@ -6,7 +6,7 @@ process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.PORT = '3333';
 process.env.HOST = '127.0.0.1';
 process.env.DATABASE_URL =
-  process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
+  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
 
 const { buildApp } = await import('../src/app');
 const { prisma } = await import('../src/shared/database/prisma');

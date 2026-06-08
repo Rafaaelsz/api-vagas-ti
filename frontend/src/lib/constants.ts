@@ -22,7 +22,7 @@ export const seniorityOptions = [
 ];
 
 export const sortOptions = [
-  { value: 'createdAt:desc', label: 'Mais recentes' },
-  { value: 'salaryMax:desc', label: 'Maior salário' },
-  { value: 'title:asc', label: 'Título A-Z' },
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'salary_desc', label: 'Maior salário' },
+  { value: 'title_asc', label: 'Título A-Z' },
 ];

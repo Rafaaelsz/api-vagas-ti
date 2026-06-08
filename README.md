@@ -160,10 +160,12 @@ Veja [.env.example](./.env.example).
 
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jobs_api?schema=public
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public
 PORT=3333
 HOST=0.0.0.0
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
+INGESTION_CONFIG_PATH=config/ingestion-sources.json
 ```
 
 ## Como Rodar Com Docker
@@ -234,6 +236,8 @@ npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
 npm run prisma:studio
+npm run ingest
+npm run ingest:prod
 ```
 
 ## Swagger
@@ -262,6 +266,68 @@ Configure:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3333
 ```
+
+## Ingestão de Vagas
+
+A API possui um pipeline de ingestão para alimentar vagas a partir de fontes permitidas e estáveis. A V1 suporta:
+
+- JSON local ou remoto;
+- Greenhouse public job board API;
+- Lever postings API.
+
+O arquivo `config/ingestion-sources.example.json` ja vem configurado com fontes publicas reais via Greenhouse:
+
+- Stripe;
+- Cloudflare;
+- Discord.
+
+Essas fontes usam filtros de inclusao e exclusao para manter o recorte em vagas de tecnologia e evitar carregar vagas comerciais, marketing, juridico, recrutamento e similares.
+
+Não há scraping direto de LinkedIn, Glassdoor ou Indeed. Essas plataformas possuem restrições de automação e devem ser usadas apenas via APIs oficiais, parcerias ou autorização explícita.
+
+1. Copie a configuração de exemplo:
+
+```bash
+cp config/ingestion-sources.example.json config/ingestion-sources.json
+```
+
+2. Edite `config/ingestion-sources.json` com suas fontes.
+
+3. Rode a ingestão:
+
+```bash
+npm run ingest
+```
+
+Com Docker:
+
+```bash
+docker compose exec api npm run ingest:prod
+```
+
+No `docker-compose.yml`, a API usa `INGESTION_CONFIG_PATH=config/ingestion-sources.example.json`, entao o comando Docker acima ja carrega as fontes reais do exemplo.
+
+Campos de rastreio usados pela ingestão:
+
+- `externalId`
+- `source`
+- `sourceUrl`
+- `externalUrl`
+- `rawPayload`
+- `contentHash`
+- `scrapedAt`
+- `lastSeenAt`
+
+Quando `expireMissing` estiver ativo em uma fonte, vagas publicadas daquela fonte que não aparecerem na nova coleta serão marcadas como `EXPIRED`.
+
+O relatorio da ingestao mostra:
+
+- `fetched`: vagas recebidas da fonte;
+- `skipped`: vagas descartadas pelos filtros;
+- `created`: vagas novas;
+- `updated`: vagas alteradas;
+- `unchanged`: vagas ja sincronizadas;
+- `expired`: vagas marcadas como expiradas.
 
 ## Testes
 

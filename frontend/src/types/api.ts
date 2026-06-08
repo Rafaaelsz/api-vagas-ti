@@ -24,6 +24,9 @@ export type Company = {
   website?: string | null;
   location?: string | null;
   jobs?: Array<Pick<Job, 'id' | 'title' | 'status' | 'createdAt'>>;
+  _count?: {
+    jobs?: number;
+  };
   createdAt?: string;
   updatedAt?: string;
 };
@@ -72,6 +75,7 @@ export type JobsQuery = {
   salaryMax?: string | number;
   page?: string | number;
   limit?: string | number;
+  sort?: string;
   sortBy?: string;
   order?: 'asc' | 'desc' | string;
   status?: JobStatus | string;

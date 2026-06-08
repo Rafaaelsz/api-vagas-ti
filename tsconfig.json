@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src", "prisma", "eslint.config.mjs"],
+  "include": ["src", "scripts", "prisma", "eslint.config.mjs"],
   "exclude": ["node_modules", "dist"]
 }

@@ -38,7 +38,7 @@ enum JobStatus {
 
 model Company {
   id          String   @id @default(cuid())
-  name        String
+  name        String   @unique
   description String?
   website     String?
   location    String?
@@ -63,11 +63,17 @@ model Job {
   salaryMin      Int?
   salaryMax      Int?
   currency       String          @default("BRL")
+  externalId     String?
   externalUrl    String?
   source         String?
+  sourceUrl      String?
+  rawPayload     Json?
+  contentHash    String?
   status         JobStatus       @default(PUBLISHED)
   publishedAt    DateTime?
   expiresAt      DateTime?
+  scrapedAt      DateTime?
+  lastSeenAt     DateTime?
   technologies   JobTechnology[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -79,6 +85,10 @@ model Job {
   @@index([seniorityLevel])
   @@index([location])
   @@index([createdAt])
+  @@index([source])
+  @@index([externalId])
+  @@index([lastSeenAt])
+  @@unique([source, externalId])
 }
 
 model Technology {

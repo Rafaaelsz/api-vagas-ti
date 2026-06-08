@@ -6,7 +6,19 @@ import type { listCompaniesQuerySchema } from './companies.schemas';
 
 type ListCompaniesQuery = z.infer<typeof listCompaniesQuerySchema>;
 
-const companyInclude = {
+const companyListInclude = {
+  _count: {
+    select: {
+      jobs: {
+        where: {
+          status: JobStatus.PUBLISHED,
+        },
+      },
+    },
+  },
+} satisfies Prisma.CompanyInclude;
+
+const companyDetailsInclude = {
   _count: {
     select: {
       jobs: {
@@ -49,14 +61,14 @@ export function listCompanies(query: ListCompaniesQuery) {
         }
       : undefined,
     orderBy: { name: 'asc' },
-    include: companyInclude,
+    include: companyListInclude,
   });
 }
 
 export async function getCompany(id: string) {
   const company = await prisma.company.findUnique({
     where: { id },
-    include: companyInclude,
+    include: companyDetailsInclude,
   });
 
   if (!company) {

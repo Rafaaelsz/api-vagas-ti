@@ -19,10 +19,21 @@ function first(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function toQuery(searchParams: Record<string, string | string[] | undefined>): JobsQuery & { sort?: string } {
+function normalizeSort(searchParams: Record<string, string | string[] | undefined>) {
   const sort = first(searchParams.sort);
-  const [sortBy, order] = (sort ?? `${first(searchParams.sortBy) ?? 'createdAt'}:${first(searchParams.order) ?? 'desc'}`).split(':');
+  const sortBy = first(searchParams.sortBy);
+  const order = first(searchParams.order);
+  const legacySort = sort ?? (sortBy && order ? `${sortBy}:${order}` : undefined);
 
+  if (legacySort === 'salaryMax:desc') return 'salary_desc';
+  if (legacySort === 'salaryMin:asc') return 'salary_asc';
+  if (legacySort === 'title:asc') return 'title_asc';
+  if (legacySort === 'recent' || legacySort === 'salary_desc' || legacySort === 'salary_asc' || legacySort === 'title_asc') return legacySort;
+
+  return 'recent';
+}
+
+function toQuery(searchParams: Record<string, string | string[] | undefined>): JobsQuery & { sort?: string } {
   return {
     search: first(searchParams.search),
     technology: first(searchParams.technology),
@@ -34,9 +45,7 @@ function toQuery(searchParams: Record<string, string | string[] | undefined>): J
     salaryMax: first(searchParams.salaryMax),
     page: first(searchParams.page) ?? 1,
     limit: first(searchParams.limit) ?? 10,
-    sortBy,
-    order,
-    sort: sort ?? `${sortBy}:${order}`,
+    sort: normalizeSort(searchParams),
   };
 }
 

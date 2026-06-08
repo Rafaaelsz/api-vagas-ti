@@ -28,6 +28,7 @@ services:
       HOST: 0.0.0.0
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jobs_api?schema=public
       FRONTEND_URL: http://localhost:3000
+      INGESTION_CONFIG_PATH: config/ingestion-sources.example.json
     ports:
       - "3333:3333"
     command: sh -c "npx prisma migrate deploy && node dist/src/server.js"

@@ -5,8 +5,6 @@ import { Input } from '../ui/input';
 import { Select } from '../ui/select';
 
 export function JobFilters({ values }: { values: Record<string, string | undefined> }) {
-  const [sortBy = 'createdAt', order = 'desc'] = (values.sort ?? 'createdAt:desc').split(':');
-
   return (
     <form action="/vagas" className="rounded-lg border bg-card p-4 shadow-soft">
       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -15,8 +13,6 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
       </div>
 
       <input type="hidden" name="page" value="1" />
-      <input type="hidden" name="sortBy" value={sortBy} />
-      <input type="hidden" name="order" value={order} />
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <label className="space-y-1.5 md:col-span-2">
@@ -75,7 +71,7 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
 
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Ordenação</span>
-          <Select name="sort" defaultValue={values.sort ?? 'createdAt:desc'}>
+          <Select name="sort" defaultValue={values.sort ?? 'recent'}>
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

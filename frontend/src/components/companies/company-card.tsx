@@ -5,7 +5,7 @@ import { ButtonLink } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 
 export function CompanyCard({ company }: { company: Company }) {
-  const totalJobs = company.jobs?.filter((job) => job.status === 'PUBLISHED').length;
+  const totalJobs = company._count?.jobs ?? company.jobs?.filter((job) => job.status === 'PUBLISHED').length;
 
   return (
     <Card className="transition hover:-translate-y-0.5 hover:border-primary/45">

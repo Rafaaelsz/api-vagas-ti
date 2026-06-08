@@ -1,0 +1,40 @@
+{
+  "jobs": [
+    {
+      "externalId": "sample-node-backend-001",
+      "title": "Backend Developer Node.js",
+      "description": "Vaga para desenvolvimento de APIs REST com Node.js, TypeScript, PostgreSQL, Docker e AWS. Trabalho remoto para pessoa desenvolvedora sênior.",
+      "company": {
+        "name": "Sample Tech",
+        "description": "Empresa fictícia usada para validar ingestão local.",
+        "website": "https://sample-tech.example.com",
+        "location": "Remoto"
+      },
+      "location": "Remoto",
+      "salaryMin": 10000,
+      "salaryMax": 15000,
+      "currency": "BRL",
+      "externalUrl": "https://jobs.example.com/sample-node-backend-001",
+      "publishedAt": "2026-06-08T12:00:00.000Z",
+      "technologies": ["Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS"]
+    },
+    {
+      "externalId": "sample-react-frontend-002",
+      "title": "Frontend Developer React Pleno",
+      "description": "Construção de interfaces públicas com React, Next.js, TypeScript e consumo de APIs REST. Modelo híbrido CLT.",
+      "company": {
+        "name": "Interface Labs",
+        "description": "Studio fictício de interfaces para produtos digitais.",
+        "website": "https://interface-labs.example.com",
+        "location": "São Paulo, SP"
+      },
+      "location": "São Paulo, SP",
+      "salaryMin": 7000,
+      "salaryMax": 10000,
+      "currency": "BRL",
+      "externalUrl": "https://jobs.example.com/sample-react-frontend-002",
+      "publishedAt": "2026-06-08T12:00:00.000Z",
+      "technologies": ["React", "Next.js", "TypeScript"]
+    }
+  ]
+}
