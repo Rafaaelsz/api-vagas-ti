@@ -35,7 +35,15 @@ export function contentHash(value: unknown) {
 export function cleanText(value: unknown, fallback = '') {
   if (typeof value !== 'string') return fallback;
 
-  return value
+  const decoded = value
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+
+  return decoded
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -62,14 +70,23 @@ export function inferContractType(...values: Array<string | undefined | null>): 
 }
 
 export function inferSeniority(...values: Array<string | undefined | null>): SeniorityLevel {
-  const text = values.filter(Boolean).join(' ').toLowerCase();
+  const texts = values
+    .filter((value): value is string => Boolean(value))
+    .map((value) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase(),
+    );
 
-  if (/\b(intern|internship|estágio|estagio)\b/.test(text)) return SeniorityLevel.INTERN;
-  if (/\b(junior|jr\.?|júnior)\b/.test(text)) return SeniorityLevel.JUNIOR;
-  if (/\b(mid|pleno|pl\.?|middle)\b/.test(text)) return SeniorityLevel.MID_LEVEL;
-  if (/\b(senior|sr\.?|sênior)\b/.test(text)) return SeniorityLevel.SENIOR;
-  if (/\b(specialist|especialista)\b/.test(text)) return SeniorityLevel.SPECIALIST;
-  if (/\b(lead|staff|principal)\b/.test(text)) return SeniorityLevel.LEAD;
+  for (const text of texts) {
+    if (/\b(intern|internship|estagio)\b/.test(text)) return SeniorityLevel.INTERN;
+    if (/\b(lead|staff|principal)\b/.test(text)) return SeniorityLevel.LEAD;
+    if (/\b(specialist|especialista)\b/.test(text)) return SeniorityLevel.SPECIALIST;
+    if (/\b(senior|sr\.?)\b/.test(text)) return SeniorityLevel.SENIOR;
+    if (/\b(mid|pleno|pl\.?|middle)\b/.test(text)) return SeniorityLevel.MID_LEVEL;
+    if (/\b(junior|jr\.?)\b/.test(text)) return SeniorityLevel.JUNIOR;
+  }
 
   return SeniorityLevel.MID_LEVEL;
 }

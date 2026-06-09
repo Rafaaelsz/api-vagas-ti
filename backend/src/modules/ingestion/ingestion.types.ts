@@ -16,6 +16,8 @@ export type IngestionSourceConfig = {
   expireMissing?: boolean;
   includeKeywords?: string[];
   excludeKeywords?: string[];
+  includeLocations?: string[];
+  excludeLocations?: string[];
   requireTechnologyMatch?: boolean;
 };
 

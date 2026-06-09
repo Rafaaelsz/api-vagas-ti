@@ -1,40 +1,61 @@
 {
   "jobs": [
     {
-      "externalId": "sample-node-backend-001",
-      "title": "Backend Developer Node.js",
-      "description": "Vaga para desenvolvimento de APIs REST com Node.js, TypeScript, PostgreSQL, Docker e AWS. Trabalho remoto para pessoa desenvolvedora sênior.",
+      "externalId": "greenhouse-gympass-8562202002",
+      "title": "AI & Data Intern",
+      "description": "Wellhub is building workplace wellness products and hires technology professionals through its public Greenhouse job board.",
       "company": {
-        "name": "Sample Tech",
-        "description": "Empresa fictícia usada para validar ingestão local.",
-        "website": "https://sample-tech.example.com",
-        "location": "Remoto"
+        "name": "Wellhub",
+        "description": "Wellhub is a corporate wellness platform formerly known as Gympass.",
+        "website": "https://wellhub.com",
+        "location": "Brazil (Remote)"
       },
-      "location": "Remoto",
-      "salaryMin": 10000,
-      "salaryMax": 15000,
+      "location": "Brazil (Remote)",
+      "salaryMin": null,
+      "salaryMax": null,
       "currency": "BRL",
-      "externalUrl": "https://jobs.example.com/sample-node-backend-001",
+      "externalUrl": "https://job-boards.greenhouse.io/gympass/jobs/8562202002",
+      "sourceUrl": "https://boards-api.greenhouse.io/v1/boards/gympass/jobs?content=true",
       "publishedAt": "2026-06-08T12:00:00.000Z",
-      "technologies": ["Node.js", "TypeScript", "PostgreSQL", "Docker", "AWS"]
+      "technologies": ["Python", "AWS"]
     },
     {
-      "externalId": "sample-react-frontend-002",
-      "title": "Frontend Developer React Pleno",
-      "description": "Construção de interfaces públicas com React, Next.js, TypeScript e consumo de APIs REST. Modelo híbrido CLT.",
+      "externalId": "greenhouse-thoughtworks-7947042",
+      "title": "Developer Senior Java& Kafka&Quarkus&React",
+      "description": "Thoughtworks publishes software delivery and technology consulting roles through its public Greenhouse job board.",
       "company": {
-        "name": "Interface Labs",
-        "description": "Studio fictício de interfaces para produtos digitais.",
-        "website": "https://interface-labs.example.com",
-        "location": "São Paulo, SP"
+        "name": "Thoughtworks",
+        "description": "Thoughtworks is a global technology consultancy.",
+        "website": "https://www.thoughtworks.com",
+        "location": "Brazil, Brazil"
       },
-      "location": "São Paulo, SP",
-      "salaryMin": 7000,
-      "salaryMax": 10000,
+      "location": "Brazil, Brazil",
+      "salaryMin": null,
+      "salaryMax": null,
       "currency": "BRL",
-      "externalUrl": "https://jobs.example.com/sample-react-frontend-002",
+      "externalUrl": "https://www.thoughtworks.com/careers/jobs/7947042?gh_jid=7947042",
+      "sourceUrl": "https://boards-api.greenhouse.io/v1/boards/thoughtworks/jobs?content=true",
       "publishedAt": "2026-06-08T12:00:00.000Z",
-      "technologies": ["React", "Next.js", "TypeScript"]
+      "technologies": ["Java", "React"]
+    },
+    {
+      "externalId": "greenhouse-ebanx-7676154003",
+      "title": "Mid-Level Observability Engineer",
+      "description": "EBANX publishes engineering and technology roles through its public Greenhouse job board.",
+      "company": {
+        "name": "EBANX",
+        "description": "EBANX is a payments company from Latin America.",
+        "website": "https://www.ebanx.com",
+        "location": "Curitiba, PR, Brasil"
+      },
+      "location": "Sao Paulo or Curitiba",
+      "salaryMin": null,
+      "salaryMax": null,
+      "currency": "BRL",
+      "externalUrl": "https://job-boards.greenhouse.io/ebanx/jobs/7676154003",
+      "sourceUrl": "https://boards-api.greenhouse.io/v1/boards/ebanx/jobs?content=true",
+      "publishedAt": "2026-06-08T12:00:00.000Z",
+      "technologies": ["AWS", "Docker"]
     }
   ]
 }

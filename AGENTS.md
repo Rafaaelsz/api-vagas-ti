@@ -46,7 +46,7 @@ A V1 deve focar em uma API pública, simples e bem estruturada.
 * Visualização de detalhes da empresa.
 * Listagem de tecnologias.
 * Estatísticas gerais.
-* Seed com dados fictícios realistas.
+* Seed com dados reais vindos de fontes públicas oficiais.
 * Documentação Swagger/OpenAPI.
 * Docker funcionando.
 * Código organizado e tipado.
@@ -151,11 +151,11 @@ Não usar banco em memória para a aplicação principal.
 
 ### 4.4 Dados da aplicação
 
-A V1 pode usar dados fictícios via seed.
+A V1 deve priorizar dados reais via seed/ingestão a partir de fontes públicas oficiais.
 
-A aplicação não precisa coletar vagas reais automaticamente nesta primeira versão.
+A aplicação não deve apresentar empresas ou vagas fictícias como se fossem dados funcionais.
 
-Scraping, integração com APIs externas ou importação automática de vagas podem ser tratados como melhorias futuras.
+Scraping direto de plataformas fechadas não deve ser usado. Integrações com APIs públicas oficiais, como Greenhouse e Lever, fazem parte do escopo funcional atual.
 
 ---
 
@@ -589,7 +589,7 @@ npx prisma db seed
 npx prisma studio
 ```
 
-O seed deve criar dados fictícios realistas para testar o frontend.
+O seed deve popular a base a partir de fontes reais oficiais para testar o frontend com dados funcionais.
 
 ---
 

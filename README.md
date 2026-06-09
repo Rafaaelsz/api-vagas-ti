@@ -128,7 +128,7 @@ PORT=3333
 HOST=127.0.0.1
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
-INGESTION_CONFIG_PATH=config/ingestion-sources.json
+INGESTION_CONFIG_PATH=config/ingestion-sources.example.json
 ```
 
 ## Frontend Local
@@ -167,21 +167,44 @@ NEXT_PUBLIC_API_URL=http://localhost:3333
 - `/estatisticas`
 - `/sobre`
 
-## Ingestao De Vagas
+## Ingestao De Vagas Reais
 
-O backend possui pipeline de ingestao para fontes permitidas e estaveis:
+O backend possui pipeline de ingestao para fontes publicas oficiais:
 
 - JSON local ou remoto;
 - Greenhouse public job board API;
 - Lever postings API.
 
-O arquivo `backend/config/ingestion-sources.example.json` ja vem configurado com fontes publicas reais via Greenhouse:
+O projeto nao usa empresas ficticias como base funcional. O seed limpa a base e popula vagas reais a partir das fontes configuradas:
 
-- Stripe;
-- Cloudflare;
-- Discord.
+```bash
+cd backend
+npm run prisma:seed
+```
 
-Para configurar fontes locais:
+O arquivo `backend/config/ingestion-sources.example.json` ja vem configurado com fontes reais via Greenhouse e Lever:
+
+- Nubank;
+- Wellhub;
+- Thoughtworks;
+- QuintoAndar;
+- Stone;
+- EBANX;
+- Stripe Brasil;
+- CloudWalk.
+
+As fontes de ingestao aceitam filtros opcionais de localizacao:
+
+```json
+{
+  "includeLocations": ["Brazil", "Brasil", "Sao Paulo", "Remote - Brazil"],
+  "excludeLocations": ["Canada", "United States"]
+}
+```
+
+Use `includeLocations` para priorizar vagas do Brasil e evitar que vagas remotas globais dominem a listagem publica.
+
+Para customizar fontes locais:
 
 ```bash
 cd backend
@@ -189,7 +212,13 @@ cp config/ingestion-sources.example.json config/ingestion-sources.json
 npm run ingest
 ```
 
-Com Docker, o compose usa `INGESTION_CONFIG_PATH=config/ingestion-sources.example.json` dentro do container:
+Com Docker, o compose roda migrations, executa a ingestao real e entao inicia a API:
+
+```bash
+docker compose up -d --build
+```
+
+Para atualizar as vagas depois que os containers estiverem no ar:
 
 ```bash
 docker compose exec api npm run ingest:prod

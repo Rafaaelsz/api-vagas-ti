@@ -32,7 +32,7 @@ services:
       INGESTION_CONFIG_PATH: config/ingestion-sources.example.json
     ports:
       - "3333:3333"
-    command: sh -c "npx prisma migrate deploy && node dist/src/server.js"
+    command: sh -c "npx prisma migrate deploy && node dist/scripts/ingest.js && node dist/src/server.js"
 
   adminer:
     image: adminer:4

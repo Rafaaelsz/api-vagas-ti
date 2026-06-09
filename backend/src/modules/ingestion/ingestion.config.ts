@@ -17,6 +17,8 @@ const sourceSchema = z.object({
   expireMissing: z.boolean().default(false),
   includeKeywords: z.array(z.string().min(1)).default([]),
   excludeKeywords: z.array(z.string().min(1)).default([]),
+  includeLocations: z.array(z.string().min(1)).default([]),
+  excludeLocations: z.array(z.string().min(1)).default([]),
   requireTechnologyMatch: z.boolean().default(false),
 });
 
@@ -28,6 +30,13 @@ export function loadIngestionConfig(configPath = process.env.INGESTION_CONFIG_PA
   const absolutePath = path.resolve(process.cwd(), configPath);
 
   if (!existsSync(absolutePath)) {
+    const examplePath = path.resolve(process.cwd(), 'config/ingestion-sources.example.json');
+
+    if (absolutePath !== examplePath && existsSync(examplePath)) {
+      const rawExampleConfig = JSON.parse(readFileSync(examplePath, 'utf8')) as unknown;
+      return ingestionConfigSchema.parse(rawExampleConfig);
+    }
+
     return { sources: [] };
   }
 

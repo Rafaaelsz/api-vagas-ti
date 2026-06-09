@@ -2,26 +2,39 @@ import { ContractType, JobStatus, SeniorityLevel, WorkMode } from '@prisma/clien
 import { z } from 'zod';
 import { paginationSchema } from '../../shared/utils/pagination';
 
+function emptyToUndefined(value: unknown) {
+  if (typeof value !== 'string') return value;
+
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+const optionalStringSchema = z.preprocess(emptyToUndefined, z.string().min(1).optional());
+const optionalNumberSchema = z.preprocess(emptyToUndefined, z.coerce.number().int().nonnegative().optional());
+const optionalWorkModeSchema = z.preprocess(emptyToUndefined, z.nativeEnum(WorkMode).optional());
+const optionalContractTypeSchema = z.preprocess(emptyToUndefined, z.nativeEnum(ContractType).optional());
+const optionalSeniorityLevelSchema = z.preprocess(emptyToUndefined, z.nativeEnum(SeniorityLevel).optional());
+
 export const jobIdParamsSchema = z.object({
   id: z.string().cuid(),
 });
 
 export const listJobsQuerySchema = paginationSchema
   .extend({
-    search: z.string().trim().min(1).optional(),
-    technology: z.string().trim().min(1).optional(),
-    workMode: z.nativeEnum(WorkMode).optional(),
-    contractType: z.nativeEnum(ContractType).optional(),
-    seniorityLevel: z.nativeEnum(SeniorityLevel).optional(),
-    location: z.string().trim().min(1).optional(),
-    salaryMin: z.coerce.number().int().nonnegative().optional(),
-    salaryMax: z.coerce.number().int().nonnegative().optional(),
-    status: z.nativeEnum(JobStatus).default(JobStatus.PUBLISHED),
-    sort: z.enum(['recent', 'salary_desc', 'salary_asc', 'title_asc']).default('recent'),
-    sortBy: z.enum(['createdAt', 'publishedAt', 'salaryMin', 'salaryMax', 'title']).optional(),
-    order: z.enum(['asc', 'desc']).optional(),
+    search: optionalStringSchema,
+    technology: optionalStringSchema,
+    workMode: optionalWorkModeSchema,
+    contractType: optionalContractTypeSchema,
+    seniorityLevel: optionalSeniorityLevelSchema,
+    location: optionalStringSchema,
+    salaryMin: optionalNumberSchema,
+    salaryMax: optionalNumberSchema,
+    status: z.preprocess(emptyToUndefined, z.nativeEnum(JobStatus).default(JobStatus.PUBLISHED)),
+    sort: z.preprocess(emptyToUndefined, z.enum(['recent', 'salary_desc', 'salary_asc', 'title_asc']).default('recent')),
+    sortBy: z.preprocess(emptyToUndefined, z.enum(['createdAt', 'publishedAt', 'salaryMin', 'salaryMax', 'title']).optional()),
+    order: z.preprocess(emptyToUndefined, z.enum(['asc', 'desc']).optional()),
   })
-  .refine((data) => !data.salaryMin || !data.salaryMax || data.salaryMin <= data.salaryMax, {
+  .refine((data) => data.salaryMin === undefined || data.salaryMax === undefined || data.salaryMin <= data.salaryMax, {
     message: 'salaryMin deve ser menor ou igual a salaryMax.',
     path: ['salaryMin'],
   });

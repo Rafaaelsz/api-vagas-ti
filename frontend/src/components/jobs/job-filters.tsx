@@ -4,6 +4,13 @@ import { ButtonLink } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select } from '../ui/select';
 
+const quickFilters = [
+  { href: '/vagas?location=Brasil', label: 'Vagas no Brasil' },
+  { href: '/vagas?location=Brasil&seniorityLevel=JUNIOR', label: 'Júnior no Brasil' },
+  { href: '/vagas?location=Brasil&seniorityLevel=MID_LEVEL', label: 'Pleno no Brasil' },
+  { href: '/vagas?location=Brasil&contractType=INTERNSHIP', label: 'Estágio no Brasil' },
+];
+
 export function JobFilters({ values }: { values: Record<string, string | undefined> }) {
   return (
     <form action="/vagas" className="rounded-lg border bg-card p-4 shadow-soft">
@@ -13,6 +20,14 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
       </div>
 
       <input type="hidden" name="page" value="1" />
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {quickFilters.map((filter) => (
+          <ButtonLink key={filter.href} href={filter.href} variant="outline" size="sm">
+            {filter.label}
+          </ButtonLink>
+        ))}
+      </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <label className="space-y-1.5 md:col-span-2">
@@ -30,7 +45,7 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
 
         <label className="space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Localização</span>
-          <Input name="location" defaultValue={values.location} placeholder="Remoto, São Paulo..." />
+          <Input name="location" defaultValue={values.location} placeholder="Brasil, Remoto, São Paulo..." />
         </label>
 
         <label className="space-y-1.5">

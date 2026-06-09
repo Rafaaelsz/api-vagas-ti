@@ -8,6 +8,7 @@ process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
 
 const { runIngestion } = await import('../src/modules/ingestion/ingestion.service');
+const { inferSeniority } = await import('../src/modules/ingestion/normalization');
 const { prisma } = await import('../src/shared/database/prisma');
 
 describe('ingestion pipeline', () => {
@@ -48,9 +49,9 @@ describe('ingestion pipeline', () => {
     expect(firstRun).toEqual([
       {
         source: 'test-json',
-        fetched: 2,
+        fetched: 3,
         skipped: 0,
-        created: 2,
+        created: 3,
         updated: 0,
         unchanged: 0,
         expired: 0,
@@ -58,18 +59,48 @@ describe('ingestion pipeline', () => {
     ]);
     expect(secondRun[0]).toMatchObject({
       source: 'test-json',
-      fetched: 2,
+      fetched: 3,
       skipped: 0,
       created: 0,
-      unchanged: 2,
+      unchanged: 3,
       expired: 0,
     });
-    expect(jobs).toHaveLength(2);
+    expect(jobs).toHaveLength(3);
     expect(jobs[0].externalId).toBeTruthy();
     expect(jobs[0].source).toBe('test-json');
     expect(jobs[0].contentHash).toBeTruthy();
     expect(jobs[0].rawPayload).toBeTruthy();
     expect(jobs[0].lastSeenAt).toBeInstanceOf(Date);
     expect(jobs[0].technologies.length).toBeGreaterThan(0);
+  });
+
+  it('filtra ingestao por localizacao quando includeLocations e informado', async () => {
+    const config = {
+      sources: [
+        {
+          name: 'test-json',
+          type: 'json' as const,
+          filePath: 'data/jobs-sample.json',
+          includeLocations: ['Sao Paulo'],
+        },
+      ],
+    };
+
+    const result = await runIngestion(config);
+    const jobs = await prisma.job.findMany({ orderBy: { title: 'asc' } });
+
+    expect(result[0]).toMatchObject({
+      fetched: 3,
+      skipped: 2,
+      created: 1,
+    });
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].location).toContain('Sao Paulo');
+  });
+
+  it('prioriza senioridade explicita do titulo antes de mencoes soltas na descricao', () => {
+    expect(inferSeniority('Staff Software Engineer', 'Mentora pessoas junior e pleno.')).toBe('LEAD');
+    expect(inferSeniority('Senior Software Engineer', 'Trabalha com pessoas junior e pleno.')).toBe('SENIOR');
+    expect(inferSeniority('AI & Data Intern', 'Interage com times senior.')).toBe('INTERN');
   });
 });

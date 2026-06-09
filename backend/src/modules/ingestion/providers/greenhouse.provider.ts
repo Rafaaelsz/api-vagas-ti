@@ -35,7 +35,9 @@ export function createGreenhouseProvider(source: IngestionSourceConfig): Ingesti
       return jobs.map((job): NormalizedJob => {
         const description = cleanText(job.content, 'Descrição não informada.');
         const title = cleanText(job.title, 'Vaga sem título');
-        const location = job.location?.name ?? job.offices?.[0]?.location ?? job.offices?.[0]?.name ?? source.defaultLocation;
+        const officeLocation = job.offices?.find((office) => office.location || office.name);
+        const jobLocation = job.location?.name && job.location.name !== 'N/A' ? job.location.name : undefined;
+        const location = jobLocation ?? officeLocation?.location ?? officeLocation?.name ?? source.defaultLocation;
 
         return {
           source: source.name,

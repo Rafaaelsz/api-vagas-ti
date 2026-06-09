@@ -27,38 +27,147 @@ function getOrderBy(query: ListJobsQuery): Prisma.JobOrderByWithRelationInput {
   return sortMap[query.sort];
 }
 
-export async function listJobs(query: ListJobsQuery) {
-  const searchFilter: Prisma.JobWhereInput[] | undefined = query.search
-    ? [
-        { title: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-        { location: { contains: query.search, mode: 'insensitive' } },
-        { company: { name: { contains: query.search, mode: 'insensitive' } } },
-        {
-          technologies: {
-            some: {
-              technology: {
-                name: { contains: query.search, mode: 'insensitive' },
-              },
-            },
+function normalizeText(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function getTextVariants(value: string) {
+  const variants = new Set<string>();
+  const trimmed = value.trim();
+  const normalized = normalizeText(trimmed);
+  const brazilLocationTerms = [
+    'Brazil',
+    'Brasil',
+    'Sao Paulo',
+    'São Paulo',
+    'Rio de Janeiro',
+    'Belo Horizonte',
+    'Curitiba',
+    'Porto Alegre',
+    'Recife',
+    'Salvador',
+    'Fortaleza',
+    'Florianopolis',
+    'Florianópolis',
+    'Brasilia',
+    'Brasília',
+  ];
+
+  variants.add(trimmed);
+  variants.add(normalized);
+
+  if (/\bsao\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bsao\b/gi, 'São'));
+  }
+
+  if (/\bflorianopolis\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bflorianopolis\b/gi, 'Florianópolis'));
+  }
+
+  if (/\bbrasil\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bbrasil\b/gi, 'Brazil'));
+    brazilLocationTerms.forEach((term) => variants.add(term));
+  }
+
+  if (/\bbrazil\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bbrazil\b/gi, 'Brasil'));
+    brazilLocationTerms.forEach((term) => variants.add(term));
+  }
+
+  if (/\bremoto\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bremoto\b/gi, 'Remote'));
+  }
+
+  if (/\bremote\b/i.test(normalized)) {
+    variants.add(normalized.replace(/\bremote\b/gi, 'Remoto'));
+  }
+
+  return [...variants].filter(Boolean);
+}
+
+function containsInsensitive(value: string): Prisma.StringFilter {
+  return { contains: value, mode: 'insensitive' };
+}
+
+function buildSearchFilter(search?: string): Prisma.JobWhereInput[] | undefined {
+  if (!search) return undefined;
+
+  return getTextVariants(search).flatMap((term) => [
+    { title: containsInsensitive(term) },
+    { description: containsInsensitive(term) },
+    { location: containsInsensitive(term) },
+    { company: { name: containsInsensitive(term) } },
+    { company: { location: containsInsensitive(term) } },
+    {
+      technologies: {
+        some: {
+          technology: {
+            name: containsInsensitive(term),
           },
         },
-      ]
-    : undefined;
+      },
+    },
+  ]);
+}
+
+function buildLocationFilter(location?: string): Prisma.JobWhereInput | undefined {
+  if (!location) return undefined;
+
+  return {
+    OR: getTextVariants(location).flatMap((term) => [
+      { location: containsInsensitive(term) },
+      { company: { location: containsInsensitive(term) } },
+    ]),
+  };
+}
+
+function buildSalaryFilters(query: ListJobsQuery): Prisma.JobWhereInput[] {
+  const filters: Prisma.JobWhereInput[] = [];
+
+  if (query.salaryMin !== undefined) {
+    filters.push({
+      OR: [
+        { salaryMax: { gte: query.salaryMin } },
+        {
+          AND: [{ salaryMax: null }, { salaryMin: { gte: query.salaryMin } }],
+        },
+      ],
+    });
+  }
+
+  if (query.salaryMax !== undefined) {
+    filters.push({
+      OR: [
+        { salaryMin: { lte: query.salaryMax } },
+        {
+          AND: [{ salaryMin: null }, { salaryMax: { lte: query.salaryMax } }],
+        },
+      ],
+    });
+  }
+
+  return filters;
+}
+
+function isJobWhereInput(filter: Prisma.JobWhereInput | undefined): filter is Prisma.JobWhereInput {
+  return filter !== undefined;
+}
+
+export async function listJobs(query: ListJobsQuery) {
+  const searchFilter = buildSearchFilter(query.search);
+  const filters = [buildLocationFilter(query.location), ...buildSalaryFilters(query)].filter(isJobWhereInput);
 
   const where: Prisma.JobWhereInput = {
     status: query.status,
     workMode: query.workMode,
     contractType: query.contractType,
     seniorityLevel: query.seniorityLevel,
-    location: query.location ? { contains: query.location, mode: 'insensitive' } : undefined,
-    salaryMin: query.salaryMin ? { gte: query.salaryMin } : undefined,
-    salaryMax: query.salaryMax ? { lte: query.salaryMax } : undefined,
+    AND: filters.length ? filters : undefined,
     technologies: query.technology
       ? {
           some: {
             technology: {
-              name: { contains: query.technology, mode: 'insensitive' },
+              name: containsInsensitive(query.technology),
             },
           },
         }

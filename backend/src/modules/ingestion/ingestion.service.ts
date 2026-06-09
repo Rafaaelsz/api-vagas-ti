@@ -156,13 +156,25 @@ async function expireMissingJobs(source: string, seenExternalIds: string[], scra
 }
 
 function includesAnyKeyword(text: string, keywords: string[]) {
-  const normalizedText = text.toLowerCase();
-  return keywords.some((keyword) => normalizedText.includes(keyword.toLowerCase()));
+  const normalizedText = text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  return keywords.some((keyword) =>
+    normalizedText.includes(
+      keyword
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase(),
+    ),
+  );
 }
 
 function shouldImportJob(job: NormalizedJob, source: IngestionSourceConfig) {
   const includeSearchableText = [job.title, job.technologies.join(' ')].filter(Boolean).join(' ');
   const excludeSearchableText = job.title;
+  const locationSearchableText = [job.location, job.company.location].filter(Boolean).join(' ');
 
   if (source.requireTechnologyMatch && job.technologies.length === 0) {
     return false;
@@ -173,6 +185,14 @@ function shouldImportJob(job: NormalizedJob, source: IngestionSourceConfig) {
   }
 
   if (source.excludeKeywords?.length && includesAnyKeyword(excludeSearchableText, source.excludeKeywords)) {
+    return false;
+  }
+
+  if (source.includeLocations?.length && !includesAnyKeyword(locationSearchableText, source.includeLocations)) {
+    return false;
+  }
+
+  if (source.excludeLocations?.length && includesAnyKeyword(locationSearchableText, source.excludeLocations)) {
     return false;
   }
 
