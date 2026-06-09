@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ActiveJobFilters } from '@/components/jobs/active-job-filters';
 import { JobFilters } from '@/components/jobs/job-filters';
 import { JobList } from '@/components/jobs/job-list';
 import { ErrorState } from '@/components/shared/error-state';
@@ -74,12 +75,7 @@ export default async function JobsPage({ searchParams }: PageProps) {
         </div>
 
         <JobFilters values={query as Record<string, string | undefined>} />
-
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            {response.meta.total} vaga{response.meta.total === 1 ? '' : 's'} encontrada{response.meta.total === 1 ? '' : 's'}
-          </p>
-        </div>
+        <ActiveJobFilters query={query} total={response.meta.total} />
 
         <JobList jobs={response.data} />
         <Pagination page={response.meta.page} totalPages={response.meta.totalPages} buildHref={(page) => buildPageHref(query, page)} />

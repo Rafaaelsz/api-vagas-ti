@@ -4,8 +4,64 @@ import type { IngestionConfig, IngestionResult, IngestionSourceConfig, Normalize
 import { contentHash } from './normalization';
 import { createProvider } from './providers';
 
+const legacyDemoCompanyNames = [
+  'CodeWorks Brasil',
+  'Floripa Dev Studio',
+  'DataBridge Labs',
+  'Nordeste Cloud',
+  'Pixel Forge',
+  'AgroData Tech',
+  'Northstar Tech',
+  'Sample Tech Brasil',
+  'Interface Labs',
+  'Remote Labs',
+  'Global Sample',
+];
+
+const legacyDemoSources = ['Seed Jobs', 'Vitest', 'test-suite', 'test-json', 'local-json-demo'];
+
 function normalizeTechnologyName(name: string) {
   return name.trim();
+}
+
+export async function removeLegacyDemoData() {
+  const legacyJobs = await prisma.job.findMany({
+    where: {
+      OR: [
+        { source: { in: legacyDemoSources } },
+        { externalUrl: { contains: 'jobs.example.com' } },
+        { externalUrl: { contains: 'example.com' } },
+        { company: { name: { in: legacyDemoCompanyNames } } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (!legacyJobs.length) {
+    return { jobs: 0, companies: 0 };
+  }
+
+  const legacyJobIds = legacyJobs.map((job) => job.id);
+
+  await prisma.jobTechnology.deleteMany({
+    where: { jobId: { in: legacyJobIds } },
+  });
+
+  const deletedJobs = await prisma.job.deleteMany({
+    where: { id: { in: legacyJobIds } },
+  });
+
+  const deletedCompanies = await prisma.company.deleteMany({
+    where: {
+      OR: [{ name: { in: legacyDemoCompanyNames } }, { website: { contains: 'example.com' } }],
+      jobs: { none: {} },
+    },
+  });
+
+  return {
+    jobs: deletedJobs.count,
+    companies: deletedCompanies.count,
+  };
 }
 
 async function upsertJob(job: NormalizedJob, scrapedAt: Date) {

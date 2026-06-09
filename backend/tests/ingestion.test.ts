@@ -7,7 +7,7 @@ process.env.HOST = '127.0.0.1';
 process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
 
-const { runIngestion } = await import('../src/modules/ingestion/ingestion.service');
+const { removeLegacyDemoData, runIngestion } = await import('../src/modules/ingestion/ingestion.service');
 const { inferSeniority } = await import('../src/modules/ingestion/normalization');
 const { prisma } = await import('../src/shared/database/prisma');
 
@@ -102,5 +102,64 @@ describe('ingestion pipeline', () => {
     expect(inferSeniority('Staff Software Engineer', 'Mentora pessoas junior e pleno.')).toBe('LEAD');
     expect(inferSeniority('Senior Software Engineer', 'Trabalha com pessoas junior e pleno.')).toBe('SENIOR');
     expect(inferSeniority('AI & Data Intern', 'Interage com times senior.')).toBe('INTERN');
+  });
+
+  it('remove vagas demo legadas sem apagar vagas reais importadas', async () => {
+    const [legacyCompany, realCompany] = await Promise.all([
+      prisma.company.create({
+        data: {
+          name: 'Legacy Demo Company',
+          website: 'https://legacy.example.com',
+          location: 'Remoto',
+        },
+      }),
+      prisma.company.create({
+        data: {
+          name: 'Nubank',
+          website: 'https://nubank.com.br',
+          location: 'Brazil, Sao Paulo',
+        },
+      }),
+    ]);
+
+    await Promise.all([
+      prisma.job.create({
+        data: {
+          title: 'Demo Backend Developer',
+          description: 'Registro legado criado antes da ingestao real.',
+          companyId: legacyCompany.id,
+          location: 'Remoto',
+          workMode: 'REMOTE',
+          contractType: 'PJ',
+          seniorityLevel: 'JUNIOR',
+          externalUrl: 'https://jobs.example.com/demo-backend',
+          source: 'Seed Jobs',
+          status: 'PUBLISHED',
+        },
+      }),
+      prisma.job.create({
+        data: {
+          title: 'Finance Data Specialist',
+          description: 'Vaga real importada de fonte publica oficial.',
+          companyId: realCompany.id,
+          location: 'Brazil, Sao Paulo',
+          workMode: 'ONSITE',
+          contractType: 'CLT',
+          seniorityLevel: 'SPECIALIST',
+          externalUrl: 'https://job-boards.greenhouse.io/nubank/jobs/7954561',
+          source: 'greenhouse-nubank',
+          externalId: '7954561',
+          status: 'PUBLISHED',
+        },
+      }),
+    ]);
+
+    const removed = await removeLegacyDemoData();
+    const jobs = await prisma.job.findMany({ include: { company: true }, orderBy: { title: 'asc' } });
+
+    expect(removed).toEqual({ jobs: 1, companies: 1 });
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].company.name).toBe('Nubank');
+    expect(jobs[0].source).toBe('greenhouse-nubank');
   });
 });
