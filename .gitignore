@@ -8,3 +8,4 @@ coverage
 *.log
 .next
 frontend/.next
+vercel.json
