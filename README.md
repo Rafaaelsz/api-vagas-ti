@@ -1,4 +1,4 @@
-# API de Vagas de TI
+# Finder de Vagas de TI
 
 Projeto full stack para busca publica de vagas de tecnologia.
 
