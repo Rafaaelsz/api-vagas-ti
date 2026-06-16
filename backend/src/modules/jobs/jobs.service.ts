@@ -17,7 +17,10 @@ function getOrderBy(query: ListJobsQuery): Prisma.JobOrderByWithRelationInput {
     return { [query.sortBy]: query.order ?? 'desc' };
   }
 
-  const sortMap: Record<ListJobsQuery['sort'], Prisma.JobOrderByWithRelationInput> = {
+  const sortMap: Record<
+    ListJobsQuery['sort'],
+    Prisma.JobOrderByWithRelationInput
+  > = {
     recent: { publishedAt: 'desc' },
     salary_desc: { salaryMax: 'desc' },
     salary_asc: { salaryMin: 'asc' },
@@ -29,6 +32,10 @@ function getOrderBy(query: ListJobsQuery): Prisma.JobOrderByWithRelationInput {
 
 function normalizeText(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeComparableText(value: string) {
+  return normalizeText(value).trim().toLowerCase();
 }
 
 function getTextVariants(value: string) {
@@ -89,7 +96,9 @@ function containsInsensitive(value: string): Prisma.StringFilter {
   return { contains: value, mode: 'insensitive' };
 }
 
-function buildSearchFilter(search?: string): Prisma.JobWhereInput[] | undefined {
+function buildSearchFilter(
+  search?: string,
+): Prisma.JobWhereInput[] | undefined {
   if (!search) return undefined;
 
   return getTextVariants(search).flatMap((term) => [
@@ -110,7 +119,9 @@ function buildSearchFilter(search?: string): Prisma.JobWhereInput[] | undefined 
   ]);
 }
 
-function buildLocationFilter(location?: string): Prisma.JobWhereInput | undefined {
+function buildLocationFilter(
+  location?: string,
+): Prisma.JobWhereInput | undefined {
   if (!location) return undefined;
 
   return {
@@ -118,6 +129,16 @@ function buildLocationFilter(location?: string): Prisma.JobWhereInput | undefine
       { location: containsInsensitive(term) },
       { company: { location: containsInsensitive(term) } },
     ]),
+  };
+}
+
+function buildCompanyFilter(
+  company?: string,
+): Prisma.JobWhereInput['company'] | undefined {
+  if (!company) return undefined;
+
+  return {
+    OR: [{ id: company }, { name: containsInsensitive(company) }],
   };
 }
 
@@ -149,19 +170,25 @@ function buildSalaryFilters(query: ListJobsQuery): Prisma.JobWhereInput[] {
   return filters;
 }
 
-function isJobWhereInput(filter: Prisma.JobWhereInput | undefined): filter is Prisma.JobWhereInput {
+function isJobWhereInput(
+  filter: Prisma.JobWhereInput | undefined,
+): filter is Prisma.JobWhereInput {
   return filter !== undefined;
 }
 
 export async function listJobs(query: ListJobsQuery) {
   const searchFilter = buildSearchFilter(query.search);
-  const filters = [buildLocationFilter(query.location), ...buildSalaryFilters(query)].filter(isJobWhereInput);
+  const filters = [
+    buildLocationFilter(query.location),
+    ...buildSalaryFilters(query),
+  ].filter(isJobWhereInput);
 
   const where: Prisma.JobWhereInput = {
     status: query.status,
     workMode: query.workMode,
     contractType: query.contractType,
     seniorityLevel: query.seniorityLevel,
+    company: buildCompanyFilter(query.company),
     AND: filters.length ? filters : undefined,
     technologies: query.technology
       ? {
@@ -204,4 +231,41 @@ export async function getJob(id: string) {
   }
 
   return job;
+}
+
+export async function calculateJobMatch(
+  id: string,
+  candidateTechnologies: string[],
+) {
+  const job = await getJob(id);
+  const jobTechnologies = job.technologies.map(
+    ({ technology }) => technology.name,
+  );
+  const candidateTechnologyMap = new Map(
+    candidateTechnologies.map((technology) => [
+      normalizeComparableText(technology),
+      technology,
+    ]),
+  );
+  const matchedTechnologies = jobTechnologies.filter((technology) =>
+    candidateTechnologyMap.has(normalizeComparableText(technology)),
+  );
+  const missingTechnologies = jobTechnologies.filter(
+    (technology) =>
+      !candidateTechnologyMap.has(normalizeComparableText(technology)),
+  );
+  const score = jobTechnologies.length
+    ? Math.round((matchedTechnologies.length / jobTechnologies.length) * 100)
+    : 0;
+
+  return {
+    jobId: job.id,
+    score,
+    matchedTechnologies,
+    missingTechnologies,
+    candidateTechnologies,
+    jobTechnologies,
+    totalCandidateTechnologies: candidateTechnologies.length,
+    totalJobTechnologies: jobTechnologies.length,
+  };
 }

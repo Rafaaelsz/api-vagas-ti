@@ -473,6 +473,80 @@
         "Brazil (Remote)",
         "Remoto, Brasil"
       ]
+    },
+    {
+      "name": "remotive-software",
+      "type": "remotive",
+      "enabled": true,
+      "url": "https://remotive.com/api/remote-jobs?category=software-dev",
+      "expireMissing": true,
+      "requestTimeoutMs": 20000,
+      "retryAttempts": 2,
+      "includeKeywords": [
+        "software",
+        "engineer",
+        "developer",
+        "frontend",
+        "backend",
+        "full stack",
+        "data",
+        "devops",
+        "cloud",
+        "platform",
+        "mobile",
+        "api",
+        "python",
+        "javascript",
+        "typescript",
+        "react",
+        "node",
+        "java",
+        "docker"
+      ],
+      "excludeKeywords": [
+        "account executive",
+        "sales",
+        "marketing",
+        "recruiter",
+        "customer support"
+      ]
+    },
+    {
+      "name": "arbeitnow-tech",
+      "type": "arbeitnow",
+      "enabled": true,
+      "url": "https://www.arbeitnow.com/api/job-board-api",
+      "expireMissing": true,
+      "requestTimeoutMs": 20000,
+      "retryAttempts": 2,
+      "includeKeywords": [
+        "software",
+        "engineer",
+        "developer",
+        "frontend",
+        "backend",
+        "full stack",
+        "data",
+        "devops",
+        "cloud",
+        "platform",
+        "mobile",
+        "api",
+        "python",
+        "javascript",
+        "typescript",
+        "react",
+        "node",
+        "java",
+        "docker"
+      ],
+      "excludeKeywords": [
+        "account executive",
+        "sales",
+        "marketing",
+        "recruiter",
+        "customer support"
+      ]
     }
   ]
 }

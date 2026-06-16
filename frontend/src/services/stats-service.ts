@@ -20,10 +20,26 @@ function topFromMap<T extends string>(counts: Map<T, number>, key: string) {
     .map(([value, total]) => ({ [key]: value, total }));
 }
 
-function buildPublicSummary(jobs: Job[], companies: Company[], technologies: Technology[]): StatsSummary {
-  const technologyCounts = new Map<string, { technology: Technology; total: number }>();
+function buildPublicSummary(
+  jobs: Job[],
+  companies: Company[],
+  technologies: Technology[],
+): StatsSummary {
+  const technologyCounts = new Map<
+    string,
+    { technology: Technology; total: number }
+  >();
+  const companyCounts = new Map<string, { company: Company; total: number }>();
 
   jobs.forEach((job) => {
+    if (job.company) {
+      const current = companyCounts.get(job.company.id);
+      companyCounts.set(job.company.id, {
+        company: job.company,
+        total: (current?.total ?? 0) + 1,
+      });
+    }
+
     job.technologies?.forEach(({ technology }) => {
       const current = technologyCounts.get(technology.id);
       technologyCounts.set(technology.id, {
@@ -40,7 +56,10 @@ function buildPublicSummary(jobs: Job[], companies: Company[], technologies: Tec
     totalClosedJobs: jobs.filter((job) => job.status === 'CLOSED').length,
     totalCompanies: companies.length,
     totalTechnologies: technologies.length,
-    jobsByWorkMode: topFromMap(countBy(jobs.map((job) => job.workMode)), 'workMode') as StatsSummary['jobsByWorkMode'],
+    jobsByWorkMode: topFromMap(
+      countBy(jobs.map((job) => job.workMode)),
+      'workMode',
+    ) as StatsSummary['jobsByWorkMode'],
     jobsBySeniority: topFromMap(
       countBy(jobs.map((job) => job.seniorityLevel)),
       'seniorityLevel',
@@ -49,13 +68,21 @@ function buildPublicSummary(jobs: Job[], companies: Company[], technologies: Tec
       countBy(jobs.map((job) => job.contractType)),
       'contractType',
     ) as StatsSummary['jobsByContractType'],
-    topTechnologies: [...technologyCounts.values()].sort((a, b) => b.total - a.total).slice(0, 10),
+    topTechnologies: [...technologyCounts.values()]
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10),
+    topCompanies: [...companyCounts.values()]
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10),
     topLocations: topFromMap(
       countBy(jobs.map((job) => job.location ?? 'Não informado')),
       'location',
     ) as StatsSummary['topLocations'],
     recentJobs: [...jobs]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
       .slice(0, 5),
   };
 }
@@ -65,7 +92,11 @@ export async function getStatsSummary(): Promise<StatsSummary> {
     const response = await apiFetch<DashboardResponse>('/dashboard/summary');
     return { ...response.summary, source: 'dashboard' };
   } catch (error) {
-    if (error instanceof ApiError && error.statusCode && ![401, 403, 404].includes(error.statusCode)) {
+    if (
+      error instanceof ApiError &&
+      error.statusCode &&
+      ![401, 403, 404].includes(error.statusCode)
+    ) {
       throw error;
     }
 

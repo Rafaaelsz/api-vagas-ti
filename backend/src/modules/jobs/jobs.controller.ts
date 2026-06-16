@@ -1,6 +1,14 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { parseParams, parseQuery } from '../../shared/utils/validate';
-import { jobIdParamsSchema, listJobsQuerySchema } from './jobs.schemas';
+import {
+  parseBody,
+  parseParams,
+  parseQuery,
+} from '../../shared/utils/validate';
+import {
+  jobIdParamsSchema,
+  listJobsQuerySchema,
+  matchJobBodySchema,
+} from './jobs.schemas';
 import * as jobsService from './jobs.service';
 
 export async function listJobs(request: FastifyRequest, reply: FastifyReply) {
@@ -11,4 +19,16 @@ export async function listJobs(request: FastifyRequest, reply: FastifyReply) {
 export async function getJob(request: FastifyRequest, reply: FastifyReply) {
   const { id } = parseParams(jobIdParamsSchema, request.params);
   return reply.send({ job: await jobsService.getJob(id) });
+}
+
+export async function calculateJobMatch(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = parseParams(jobIdParamsSchema, request.params);
+  const { technologies } = parseBody(matchJobBodySchema, request.body);
+
+  return reply.send({
+    match: await jobsService.calculateJobMatch(id, technologies),
+  });
 }

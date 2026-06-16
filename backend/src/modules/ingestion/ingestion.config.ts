@@ -5,7 +5,7 @@ import type { IngestionConfig } from './ingestion.types';
 
 const sourceSchema = z.object({
   name: z.string().min(1),
-  type: z.enum(['json', 'greenhouse', 'lever']),
+  type: z.enum(['json', 'greenhouse', 'lever', 'remotive', 'arbeitnow']),
   enabled: z.boolean().default(true),
   url: z.string().url().optional(),
   filePath: z.string().optional(),
@@ -20,20 +20,30 @@ const sourceSchema = z.object({
   includeLocations: z.array(z.string().min(1)).default([]),
   excludeLocations: z.array(z.string().min(1)).default([]),
   requireTechnologyMatch: z.boolean().default(false),
+  requestTimeoutMs: z.number().int().positive().max(60000).default(15000),
+  retryAttempts: z.number().int().nonnegative().max(5).default(1),
 });
 
 const ingestionConfigSchema = z.object({
   sources: z.array(sourceSchema).default([]),
 });
 
-export function loadIngestionConfig(configPath = process.env.INGESTION_CONFIG_PATH ?? 'config/ingestion-sources.json'): IngestionConfig {
+export function loadIngestionConfig(
+  configPath = process.env.INGESTION_CONFIG_PATH ??
+    'config/ingestion-sources.json',
+): IngestionConfig {
   const absolutePath = path.resolve(process.cwd(), configPath);
 
   if (!existsSync(absolutePath)) {
-    const examplePath = path.resolve(process.cwd(), 'config/ingestion-sources.example.json');
+    const examplePath = path.resolve(
+      process.cwd(),
+      'config/ingestion-sources.example.json',
+    );
 
     if (absolutePath !== examplePath && existsSync(examplePath)) {
-      const rawExampleConfig = JSON.parse(readFileSync(examplePath, 'utf8')) as unknown;
+      const rawExampleConfig = JSON.parse(
+        readFileSync(examplePath, 'utf8'),
+      ) as unknown;
       return ingestionConfigSchema.parse(rawExampleConfig);
     }
 

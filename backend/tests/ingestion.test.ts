@@ -5,10 +5,13 @@ process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.PORT = '3333';
 process.env.HOST = '127.0.0.1';
 process.env.DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
 
-const { removeLegacyDemoData, runIngestion } = await import('../src/modules/ingestion/ingestion.service');
-const { inferSeniority } = await import('../src/modules/ingestion/normalization');
+const { removeLegacyDemoData, runIngestion } =
+  await import('../src/modules/ingestion/ingestion.service');
+const { inferSeniority } =
+  await import('../src/modules/ingestion/normalization');
 const { prisma } = await import('../src/shared/database/prisma');
 
 describe('ingestion pipeline', () => {
@@ -46,24 +49,27 @@ describe('ingestion pipeline', () => {
       orderBy: { title: 'asc' },
     });
 
-    expect(firstRun).toEqual([
-      {
-        source: 'test-json',
-        fetched: 3,
-        skipped: 0,
-        created: 3,
-        updated: 0,
-        unchanged: 0,
-        expired: 0,
-      },
-    ]);
+    expect(firstRun).toHaveLength(1);
+    expect(firstRun[0]).toMatchObject({
+      source: 'test-json',
+      fetched: 3,
+      normalized: 3,
+      skipped: 0,
+      created: 3,
+      updated: 0,
+      unchanged: 0,
+      expired: 0,
+      failed: false,
+    });
     expect(secondRun[0]).toMatchObject({
       source: 'test-json',
       fetched: 3,
+      normalized: 3,
       skipped: 0,
       created: 0,
       unchanged: 3,
       expired: 0,
+      failed: false,
     });
     expect(jobs).toHaveLength(3);
     expect(jobs[0].externalId).toBeTruthy();
@@ -91,17 +97,66 @@ describe('ingestion pipeline', () => {
 
     expect(result[0]).toMatchObject({
       fetched: 3,
+      normalized: 3,
       skipped: 2,
       created: 1,
+      failed: false,
     });
     expect(jobs).toHaveLength(1);
     expect(jobs[0].location).toContain('Sao Paulo');
   });
 
   it('prioriza senioridade explicita do titulo antes de mencoes soltas na descricao', () => {
-    expect(inferSeniority('Staff Software Engineer', 'Mentora pessoas junior e pleno.')).toBe('LEAD');
-    expect(inferSeniority('Senior Software Engineer', 'Trabalha com pessoas junior e pleno.')).toBe('SENIOR');
-    expect(inferSeniority('AI & Data Intern', 'Interage com times senior.')).toBe('INTERN');
+    expect(
+      inferSeniority(
+        'Staff Software Engineer',
+        'Mentora pessoas junior e pleno.',
+      ),
+    ).toBe('LEAD');
+    expect(
+      inferSeniority(
+        'Senior Software Engineer',
+        'Trabalha com pessoas junior e pleno.',
+      ),
+    ).toBe('SENIOR');
+    expect(
+      inferSeniority('AI & Data Intern', 'Interage com times senior.'),
+    ).toBe('INTERN');
+  });
+
+  it('mantem fallback por fonte quando uma ingestao falha', async () => {
+    const config = {
+      sources: [
+        {
+          name: 'broken-json',
+          type: 'json' as const,
+          filePath: 'data/arquivo-inexistente.json',
+        },
+        {
+          name: 'test-json',
+          type: 'json' as const,
+          filePath: 'data/jobs-sample.json',
+        },
+      ],
+    };
+
+    const result = await runIngestion(config);
+    const jobs = await prisma.job.findMany();
+
+    expect(result[0]).toMatchObject({
+      source: 'broken-json',
+      fetched: 0,
+      created: 0,
+      failed: true,
+    });
+    expect(result[0].error).toBeTruthy();
+    expect(result[1]).toMatchObject({
+      source: 'test-json',
+      fetched: 3,
+      created: 3,
+      failed: false,
+    });
+    expect(jobs).toHaveLength(3);
   });
 
   it('remove vagas demo legadas sem apagar vagas reais importadas', async () => {
@@ -155,7 +210,10 @@ describe('ingestion pipeline', () => {
     ]);
 
     const removed = await removeLegacyDemoData();
-    const jobs = await prisma.job.findMany({ include: { company: true }, orderBy: { title: 'asc' } });
+    const jobs = await prisma.job.findMany({
+      include: { company: true },
+      orderBy: { title: 'asc' },
+    });
 
     expect(removed).toEqual({ jobs: 1, companies: 1 });
     expect(jobs).toHaveLength(1);

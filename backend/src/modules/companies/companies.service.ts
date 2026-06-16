@@ -2,6 +2,7 @@ import { JobStatus, Prisma } from '@prisma/client';
 import type { z } from 'zod';
 import { prisma } from '../../shared/database/prisma';
 import { HttpError } from '../../shared/errors/http-error';
+import { getPagination } from '../../shared/utils/pagination';
 import type { listCompaniesQuerySchema } from './companies.schemas';
 
 type ListCompaniesQuery = z.infer<typeof listCompaniesQuerySchema>;
@@ -49,20 +50,33 @@ const companyDetailsInclude = {
   },
 } satisfies Prisma.CompanyInclude;
 
-export function listCompanies(query: ListCompaniesQuery) {
-  return prisma.company.findMany({
-    where: query.search
-      ? {
-          OR: [
-            { name: { contains: query.search, mode: 'insensitive' } },
-            { description: { contains: query.search, mode: 'insensitive' } },
-            { location: { contains: query.search, mode: 'insensitive' } },
-          ],
-        }
-      : undefined,
-    orderBy: { name: 'asc' },
-    include: companyListInclude,
-  });
+export async function listCompanies(query: ListCompaniesQuery) {
+  const where: Prisma.CompanyWhereInput | undefined = query.search
+    ? {
+        OR: [
+          { name: { contains: query.search, mode: 'insensitive' } },
+          { description: { contains: query.search, mode: 'insensitive' } },
+          { location: { contains: query.search, mode: 'insensitive' } },
+        ],
+      }
+    : undefined;
+  const skip = (query.page - 1) * query.limit;
+
+  const [companies, total] = await prisma.$transaction([
+    prisma.company.findMany({
+      where,
+      skip,
+      take: query.limit,
+      orderBy: { name: 'asc' },
+      include: companyListInclude,
+    }),
+    prisma.company.count({ where }),
+  ]);
+
+  return {
+    data: companies,
+    meta: getPagination(query.page, query.limit, total),
+  };
 }
 
 export async function getCompany(id: string) {

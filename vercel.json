@@ -4,6 +4,11 @@
       "entrypoint": "frontend",
       "routePrefix": "/",
       "framework": "nextjs"
+    },
+    "backend": {
+      "entrypoint": "backend/src/server.ts",
+      "routePrefix": "/api",
+      "framework": "fastify"
     }
   }
 }

@@ -1,6 +1,11 @@
 import type { ContractType, SeniorityLevel, WorkMode } from '@prisma/client';
 
-export type IngestionProviderType = 'json' | 'greenhouse' | 'lever';
+export type IngestionProviderType =
+  | 'json'
+  | 'greenhouse'
+  | 'lever'
+  | 'remotive'
+  | 'arbeitnow';
 
 export type IngestionSourceConfig = {
   name: string;
@@ -19,6 +24,8 @@ export type IngestionSourceConfig = {
   includeLocations?: string[];
   excludeLocations?: string[];
   requireTechnologyMatch?: boolean;
+  requestTimeoutMs?: number;
+  retryAttempts?: number;
 };
 
 export type IngestionConfig = {
@@ -61,9 +68,23 @@ export type IngestionProvider = {
 export type IngestionResult = {
   source: string;
   fetched: number;
+  normalized: number;
   skipped: number;
   created: number;
   updated: number;
   unchanged: number;
   expired: number;
+  failed: boolean;
+  error?: string;
+  durationMs: number;
+};
+
+export type IngestionLogger = {
+  info(message: string): void;
+  warn(message: string): void;
+  error(message: string): void;
+};
+
+export type RunIngestionOptions = {
+  logger?: IngestionLogger;
 };

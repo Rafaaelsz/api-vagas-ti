@@ -1,17 +1,35 @@
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { contractTypeOptions, seniorityOptions, sortOptions, workModeOptions } from '@/lib/constants';
+import {
+  contractTypeOptions,
+  seniorityOptions,
+  sortOptions,
+  workModeOptions,
+} from '@/lib/constants';
 import { ButtonLink } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select } from '../ui/select';
 
 const quickFilters = [
   { href: '/vagas?location=Brasil', label: 'Vagas no Brasil' },
-  { href: '/vagas?location=Brasil&seniorityLevel=JUNIOR', label: 'Júnior no Brasil' },
-  { href: '/vagas?location=Brasil&seniorityLevel=MID_LEVEL', label: 'Pleno no Brasil' },
-  { href: '/vagas?location=Brasil&contractType=INTERNSHIP', label: 'Estágio no Brasil' },
+  {
+    href: '/vagas?location=Brasil&seniorityLevel=JUNIOR',
+    label: 'Júnior no Brasil',
+  },
+  {
+    href: '/vagas?location=Brasil&seniorityLevel=MID_LEVEL',
+    label: 'Pleno no Brasil',
+  },
+  {
+    href: '/vagas?location=Brasil&contractType=INTERNSHIP',
+    label: 'Estágio no Brasil',
+  },
 ];
 
-export function JobFilters({ values }: { values: Record<string, string | undefined> }) {
+export function JobFilters({
+  values,
+}: {
+  values: Record<string, string | undefined>;
+}) {
   return (
     <form action="/vagas" className="rounded-lg border bg-card p-4 shadow-soft">
       <div className="flex items-center gap-2 text-sm font-semibold">
@@ -23,7 +41,12 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
 
       <div className="mt-4 flex flex-wrap gap-2">
         {quickFilters.map((filter) => (
-          <ButtonLink key={filter.href} href={filter.href} variant="outline" size="sm">
+          <ButtonLink
+            key={filter.href}
+            href={filter.href}
+            variant="outline"
+            size="sm"
+          >
             {filter.label}
           </ButtonLink>
         ))}
@@ -31,25 +54,60 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <label className="space-y-1.5 md:col-span-2">
-          <span className="text-xs font-medium text-muted-foreground">Busca</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Busca
+          </span>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input name="search" defaultValue={values.search} placeholder="Cargo, empresa, tecnologia..." className="pl-9" />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              name="search"
+              defaultValue={values.search}
+              placeholder="Cargo, empresa, tecnologia..."
+              className="pl-9"
+            />
           </div>
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Tecnologia</span>
-          <Input name="technology" defaultValue={values.technology} placeholder="React, Node, Java..." />
+          <span className="text-xs font-medium text-muted-foreground">
+            Tecnologia
+          </span>
+          <Input
+            name="technology"
+            defaultValue={values.technology}
+            placeholder="React, Node, Java..."
+          />
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Localização</span>
-          <Input name="location" defaultValue={values.location} placeholder="Brasil, Remoto, São Paulo..." />
+          <span className="text-xs font-medium text-muted-foreground">
+            Empresa
+          </span>
+          <Input
+            name="company"
+            defaultValue={values.company}
+            placeholder="Nubank, Wellhub..."
+          />
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Modalidade</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Localização
+          </span>
+          <Input
+            name="location"
+            defaultValue={values.location}
+            placeholder="Brasil, Remoto, São Paulo..."
+          />
+        </label>
+
+        <label className="space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">
+            Modalidade
+          </span>
           <Select name="workMode" defaultValue={values.workMode ?? ''}>
             <option value="">Todas</option>
             {workModeOptions.map((option) => (
@@ -61,8 +119,13 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Senioridade</span>
-          <Select name="seniorityLevel" defaultValue={values.seniorityLevel ?? ''}>
+          <span className="text-xs font-medium text-muted-foreground">
+            Senioridade
+          </span>
+          <Select
+            name="seniorityLevel"
+            defaultValue={values.seniorityLevel ?? ''}
+          >
             <option value="">Todas</option>
             {seniorityOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -73,7 +136,9 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Contrato</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Contrato
+          </span>
           <Select name="contractType" defaultValue={values.contractType ?? ''}>
             <option value="">Todos</option>
             {contractTypeOptions.map((option) => (
@@ -85,7 +150,9 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Ordenação</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Ordenação
+          </span>
           <Select name="sort" defaultValue={values.sort ?? 'recent'}>
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -96,13 +163,29 @@ export function JobFilters({ values }: { values: Record<string, string | undefin
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Salário mínimo</span>
-          <Input type="number" min="0" name="salaryMin" defaultValue={values.salaryMin} placeholder="3000" />
+          <span className="text-xs font-medium text-muted-foreground">
+            Salário mínimo
+          </span>
+          <Input
+            type="number"
+            min="0"
+            name="salaryMin"
+            defaultValue={values.salaryMin}
+            placeholder="3000"
+          />
         </label>
 
         <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Salário máximo</span>
-          <Input type="number" min="0" name="salaryMax" defaultValue={values.salaryMax} placeholder="12000" />
+          <span className="text-xs font-medium text-muted-foreground">
+            Salário máximo
+          </span>
+          <Input
+            type="number"
+            min="0"
+            name="salaryMax"
+            defaultValue={values.salaryMax}
+            placeholder="12000"
+          />
         </label>
       </div>
 

@@ -1,8 +1,18 @@
-export type UserRole = 'ADMIN' | 'RECRUITER' | 'CANDIDATE';
 export type WorkMode = 'REMOTE' | 'HYBRID' | 'ONSITE';
-export type ContractType = 'CLT' | 'PJ' | 'INTERNSHIP' | 'FREELANCE' | 'TEMPORARY';
-export type SeniorityLevel = 'INTERN' | 'JUNIOR' | 'MID_LEVEL' | 'SENIOR' | 'SPECIALIST' | 'LEAD';
-export type JobStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'EXPIRED';
+export type ContractType =
+  | 'CLT'
+  | 'PJ'
+  | 'INTERNSHIP'
+  | 'FREELANCE'
+  | 'TEMPORARY';
+export type SeniorityLevel =
+  | 'INTERN'
+  | 'JUNIOR'
+  | 'MID_LEVEL'
+  | 'SENIOR'
+  | 'SPECIALIST'
+  | 'LEAD';
+export type JobStatus = 'PUBLISHED' | 'CLOSED' | 'EXPIRED';
 
 export type Technology = {
   id: string;
@@ -79,6 +89,7 @@ export type JobsQuery = {
   sortBy?: string;
   order?: 'asc' | 'desc' | string;
   status?: JobStatus | string;
+  company?: string;
 };
 
 export type StatsSummary = {
@@ -89,10 +100,28 @@ export type StatsSummary = {
   totalApplications?: number;
   totalTechnologies?: number;
   jobsByWorkMode: Array<{ workMode: WorkMode | string; total: number }>;
-  jobsBySeniority: Array<{ seniorityLevel: SeniorityLevel | string; total: number }>;
-  jobsByContractType?: Array<{ contractType: ContractType | string; total: number }>;
+  jobsBySeniority: Array<{
+    seniorityLevel: SeniorityLevel | string;
+    total: number;
+  }>;
+  jobsByContractType?: Array<{
+    contractType: ContractType | string;
+    total: number;
+  }>;
   topTechnologies: Array<{ technology: Technology | null; total: number }>;
+  topCompanies?: Array<{ company: Company | null; total: number }>;
   topLocations?: Array<{ location: string; total: number }>;
   recentJobs: Job[];
   source: 'dashboard' | 'public-fallback';
+};
+
+export type JobMatch = {
+  jobId: string;
+  score: number;
+  matchedTechnologies: string[];
+  missingTechnologies: string[];
+  candidateTechnologies: string[];
+  jobTechnologies: string[];
+  totalCandidateTechnologies: number;
+  totalJobTechnologies: number;
 };

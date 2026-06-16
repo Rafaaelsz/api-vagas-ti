@@ -22,7 +22,7 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-semibold">Portfólio</p>
           <p className="mt-3 text-sm text-muted-foreground">Projeto full stack para demonstrar backend, integração REST e UI pública responsiva.</p>
-          <Link href="https://github.com/" target="_blank" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+          <Link href="https://github.com/Rafaaelsz/finder-vagas-ti" target="_blank" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
             <Github className="size-4" aria-hidden />
             GitHub
           </Link>

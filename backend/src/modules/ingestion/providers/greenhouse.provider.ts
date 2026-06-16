@@ -1,5 +1,17 @@
-import type { IngestionProvider, IngestionSourceConfig, NormalizedJob } from '../ingestion.types';
-import { cleanText, extractTechnologies, inferContractType, inferSeniority, inferWorkMode, parseDate } from '../normalization';
+import type {
+  IngestionProvider,
+  IngestionSourceConfig,
+  NormalizedJob,
+} from '../ingestion.types';
+import { fetchJson } from '../http';
+import {
+  cleanText,
+  extractTechnologies,
+  inferContractType,
+  inferSeniority,
+  inferWorkMode,
+  parseDate,
+} from '../normalization';
 
 type GreenhouseJob = {
   id: number;
@@ -14,30 +26,37 @@ type GreenhouseJob = {
   offices?: Array<{ name?: string; location?: string }>;
 };
 
-export function createGreenhouseProvider(source: IngestionSourceConfig): IngestionProvider {
+export function createGreenhouseProvider(
+  source: IngestionSourceConfig,
+): IngestionProvider {
   return {
     source,
     async fetchJobs() {
       if (!source.boardToken) {
-        throw new Error(`Fonte Greenhouse "${source.name}" precisa de "boardToken".`);
+        throw new Error(
+          `Fonte Greenhouse "${source.name}" precisa de "boardToken".`,
+        );
       }
 
       const url = `https://boards-api.greenhouse.io/v1/boards/${source.boardToken}/jobs?content=true`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Greenhouse retornou status ${response.status} para ${source.boardToken}.`);
-      }
-
-      const payload = (await response.json()) as { jobs?: GreenhouseJob[] };
+      const payload = await fetchJson<{ jobs?: GreenhouseJob[] }>(url, source);
       const jobs = payload.jobs ?? [];
 
       return jobs.map((job): NormalizedJob => {
         const description = cleanText(job.content, 'Descrição não informada.');
         const title = cleanText(job.title, 'Vaga sem título');
-        const officeLocation = job.offices?.find((office) => office.location || office.name);
-        const jobLocation = job.location?.name && job.location.name !== 'N/A' ? job.location.name : undefined;
-        const location = jobLocation ?? officeLocation?.location ?? officeLocation?.name ?? source.defaultLocation;
+        const officeLocation = job.offices?.find(
+          (office) => office.location || office.name,
+        );
+        const jobLocation =
+          job.location?.name && job.location.name !== 'N/A'
+            ? job.location.name
+            : undefined;
+        const location =
+          jobLocation ??
+          officeLocation?.location ??
+          officeLocation?.name ??
+          source.defaultLocation;
 
         return {
           source: source.name,
@@ -46,7 +65,10 @@ export function createGreenhouseProvider(source: IngestionSourceConfig): Ingesti
           title,
           description,
           company: {
-            name: source.defaultCompanyName ?? source.boardToken ?? 'Empresa Greenhouse',
+            name:
+              source.defaultCompanyName ??
+              source.boardToken ??
+              'Empresa Greenhouse',
             website: source.defaultCompanyWebsite,
             location,
           },
@@ -57,7 +79,11 @@ export function createGreenhouseProvider(source: IngestionSourceConfig): Ingesti
           currency: 'BRL',
           externalUrl: job.absolute_url,
           publishedAt: parseDate(job.updated_at),
-          technologies: extractTechnologies(title, description, job.departments?.map((department) => department.name).join(' ')),
+          technologies: extractTechnologies(
+            title,
+            description,
+            job.departments?.map((department) => department.name).join(' '),
+          ),
           rawPayload: job,
         };
       });

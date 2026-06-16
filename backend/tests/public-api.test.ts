@@ -1,4 +1,9 @@
-import { ContractType, JobStatus, SeniorityLevel, WorkMode } from '@prisma/client';
+import {
+  ContractType,
+  JobStatus,
+  SeniorityLevel,
+  WorkMode,
+} from '@prisma/client';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 process.env.NODE_ENV = 'test';
@@ -6,7 +11,8 @@ process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.PORT = '3333';
 process.env.HOST = '127.0.0.1';
 process.env.DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://postgres:postgres@localhost:5432/api_vagas_test?schema=public';
 
 const { buildApp } = await import('../src/app');
 const { prisma } = await import('../src/shared/database/prisma');
@@ -26,20 +32,24 @@ async function seedPublicData() {
   const wellhub = await prisma.company.create({
     data: {
       name: 'Wellhub',
-      description: 'Plataforma corporativa de bem-estar anteriormente conhecida como Gympass.',
+      description:
+        'Plataforma corporativa de bem-estar anteriormente conhecida como Gympass.',
       website: 'https://wellhub.com',
       location: 'Brazil (Remote)',
     },
   });
 
   const [java, react, python] = await Promise.all(
-    ['Java', 'React', 'Python'].map((name) => prisma.technology.create({ data: { name } })),
+    ['Java', 'React', 'Python'].map((name) =>
+      prisma.technology.create({ data: { name } }),
+    ),
   );
 
   const backendJob = await prisma.job.create({
     data: {
       title: 'Developer Senior Java& Kafka&Quarkus&React',
-      description: 'Vaga publica da Thoughtworks para desenvolvimento com Java e React.',
+      description:
+        'Vaga publica da Thoughtworks para desenvolvimento com Java e React.',
       companyId: thoughtworks.id,
       location: 'Brazil, Brazil',
       workMode: WorkMode.REMOTE,
@@ -48,7 +58,8 @@ async function seedPublicData() {
       salaryMin: 12000,
       salaryMax: 18000,
       externalId: 'greenhouse-thoughtworks-7947042',
-      externalUrl: 'https://www.thoughtworks.com/careers/jobs/7947042?gh_jid=7947042',
+      externalUrl:
+        'https://www.thoughtworks.com/careers/jobs/7947042?gh_jid=7947042',
       source: 'test-suite',
       status: JobStatus.PUBLISHED,
       publishedAt: new Date(),
@@ -110,7 +121,10 @@ describe('public jobs API', () => {
   it('lista vagas publicas com paginacao', async () => {
     await seedPublicData();
 
-    const response = await app.inject({ method: 'GET', url: '/jobs?page=1&limit=1' });
+    const response = await app.inject({
+      method: 'GET',
+      url: '/jobs?page=1&limit=1',
+    });
     const body = response.json();
 
     expect(response.statusCode).toBe(200);
@@ -118,12 +132,12 @@ describe('public jobs API', () => {
     expect(body.meta).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2 });
   });
 
-  it('filtra vagas por busca, tecnologia e enums', async () => {
+  it('filtra vagas por busca, empresa, tecnologia e enums', async () => {
     await seedPublicData();
 
     const response = await app.inject({
       method: 'GET',
-      url: '/jobs?search=java&technology=react&workMode=REMOTE&contractType=CLT&seniorityLevel=SENIOR',
+      url: '/jobs?search=java&company=Thoughtworks&technology=react&workMode=REMOTE&contractType=CLT&seniorityLevel=SENIOR',
     });
     const body = response.json();
 
@@ -143,7 +157,9 @@ describe('public jobs API', () => {
 
     expect(response.statusCode).toBe(200);
     expect(body.data).toHaveLength(1);
-    expect(body.data[0].title).toBe('Developer Senior Java& Kafka&Quarkus&React');
+    expect(body.data[0].title).toBe(
+      'Developer Senior Java& Kafka&Quarkus&React',
+    );
   });
 
   it('ignora filtros vazios na query string', async () => {
@@ -162,36 +178,94 @@ describe('public jobs API', () => {
   it('retorna detalhes da vaga com empresa, tecnologias e externalUrl', async () => {
     const { backendJob } = await seedPublicData();
 
-    const response = await app.inject({ method: 'GET', url: `/jobs/${backendJob.id}` });
+    const response = await app.inject({
+      method: 'GET',
+      url: `/jobs/${backendJob.id}`,
+    });
     const body = response.json();
 
     expect(response.statusCode).toBe(200);
     expect(body.job.company.name).toBe('Thoughtworks');
-    expect(body.job.externalUrl).toBe('https://www.thoughtworks.com/careers/jobs/7947042?gh_jid=7947042');
+    expect(body.job.externalUrl).toBe(
+      'https://www.thoughtworks.com/careers/jobs/7947042?gh_jid=7947042',
+    );
     expect(body.job.technologies).toHaveLength(2);
+  });
+
+  it('calcula match score simples entre tecnologias do candidato e da vaga', async () => {
+    const { backendJob } = await seedPublicData();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/jobs/${backendJob.id}/match`,
+      payload: {
+        technologies: ['Java', 'Python', 'React'],
+      },
+    });
+    const body = response.json();
+
+    expect(response.statusCode).toBe(200);
+    expect(body.match).toMatchObject({
+      jobId: backendJob.id,
+      score: 100,
+      matchedTechnologies: ['Java', 'React'],
+      missingTechnologies: [],
+      totalCandidateTechnologies: 3,
+      totalJobTechnologies: 2,
+    });
   });
 
   it('lista empresas e tecnologias publicas', async () => {
     await seedPublicData();
 
-    const companiesResponse = await app.inject({ method: 'GET', url: '/companies' });
-    const technologiesResponse = await app.inject({ method: 'GET', url: '/technologies' });
+    const companiesResponse = await app.inject({
+      method: 'GET',
+      url: '/companies',
+    });
+    const technologiesResponse = await app.inject({
+      method: 'GET',
+      url: '/technologies',
+    });
 
     expect(companiesResponse.statusCode).toBe(200);
     expect(companiesResponse.json().data).toHaveLength(2);
+    expect(companiesResponse.json().meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 2,
+      totalPages: 1,
+    });
     expect(technologiesResponse.statusCode).toBe(200);
     expect(technologiesResponse.json().data).toHaveLength(3);
+  });
+
+  it('pagina empresas publicas', async () => {
+    await seedPublicData();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/companies?page=1&limit=1',
+    });
+    const body = response.json();
+
+    expect(response.statusCode).toBe(200);
+    expect(body.data).toHaveLength(1);
+    expect(body.meta).toEqual({ page: 1, limit: 1, total: 2, totalPages: 2 });
   });
 
   it('retorna estatisticas publicas e alias dashboard/summary', async () => {
     await seedPublicData();
 
     const statsResponse = await app.inject({ method: 'GET', url: '/stats' });
-    const dashboardResponse = await app.inject({ method: 'GET', url: '/dashboard/summary' });
+    const dashboardResponse = await app.inject({
+      method: 'GET',
+      url: '/dashboard/summary',
+    });
 
     expect(statsResponse.statusCode).toBe(200);
     expect(statsResponse.json().totalPublishedJobs).toBe(2);
     expect(statsResponse.json().jobsByContractType).toHaveLength(2);
+    expect(statsResponse.json().topCompanies[0].company.name).toBeTruthy();
     expect(dashboardResponse.statusCode).toBe(200);
     expect(dashboardResponse.json().summary.totalCompanies).toBe(2);
   });

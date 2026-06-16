@@ -14,6 +14,7 @@ export async function getStats() {
     jobsBySeniority,
     jobsByContractType,
     technologiesUsage,
+    companiesUsage,
     locationsUsage,
     recentJobs,
   ] = await prisma.$transaction([
@@ -48,6 +49,13 @@ export async function getStats() {
       take: 10,
     }),
     prisma.job.groupBy({
+      by: ['companyId'],
+      where: publishedJobsWhere,
+      _count: true,
+      orderBy: { _count: { id: 'desc' } },
+      take: 10,
+    }),
+    prisma.job.groupBy({
       by: ['location'],
       where: publishedJobsWhere,
       _count: true,
@@ -66,8 +74,12 @@ export async function getStats() {
   ]);
 
   const technologyIds = technologiesUsage.map((item) => item.technologyId);
+  const companyIds = companiesUsage.map((item) => item.companyId);
   const technologies = await prisma.technology.findMany({
     where: { id: { in: technologyIds } },
+  });
+  const companies = await prisma.company.findMany({
+    where: { id: { in: companyIds } },
   });
 
   return {
@@ -90,7 +102,15 @@ export async function getStats() {
       total: item._count,
     })),
     topTechnologies: technologiesUsage.map((item) => ({
-      technology: technologies.find((technology) => technology.id === item.technologyId) ?? null,
+      technology:
+        technologies.find(
+          (technology) => technology.id === item.technologyId,
+        ) ?? null,
+      total: item._count,
+    })),
+    topCompanies: companiesUsage.map((item) => ({
+      company:
+        companies.find((company) => company.id === item.companyId) ?? null,
       total: item._count,
     })),
     topLocations: locationsUsage.map((item) => ({

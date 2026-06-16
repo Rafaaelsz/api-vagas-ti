@@ -1,11 +1,16 @@
-export function formatCurrencyRange(salaryMin?: number | null, salaryMax?: number | null, currency = 'BRL') {
+export function formatCurrencyRange(
+  salaryMin?: number | null,
+  salaryMax?: number | null,
+  currency = 'BRL',
+) {
   const formatter = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
   });
 
-  if (salaryMin && salaryMax) return `${formatter.format(salaryMin)} - ${formatter.format(salaryMax)}`;
+  if (salaryMin && salaryMax)
+    return `${formatter.format(salaryMin)} - ${formatter.format(salaryMax)}`;
   if (salaryMin) return `A partir de ${formatter.format(salaryMin)}`;
   if (salaryMax) return `Até ${formatter.format(salaryMax)}`;
   return 'Salário não informado';
@@ -39,7 +44,6 @@ export function enumLabel(value?: string | null) {
     SENIOR: 'Sênior',
     SPECIALIST: 'Especialista',
     LEAD: 'Lead',
-    DRAFT: 'Rascunho',
     PUBLISHED: 'Publicada',
     CLOSED: 'Encerrada',
     EXPIRED: 'Expirada',
